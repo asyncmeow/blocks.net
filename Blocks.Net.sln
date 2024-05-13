@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.PacketSourceGene
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets", "Network\Blocks.Net.Packets\Blocks.Net.Packets.csproj", "{61D17FE7-9124-41E5-A52A-E4B2152AE405}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets.Tests", "Network\Blocks.Net.Packets.Tests\Blocks.Net.Packets.Tests.csproj", "{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,7 @@ Global
 		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{494551F9-C91B-4560-896B-556FCD2571CD} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
+		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -38,5 +41,9 @@ Global
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
