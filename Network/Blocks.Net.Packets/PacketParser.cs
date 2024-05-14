@@ -22,4 +22,12 @@ public static partial class PacketParser
         if (StatusServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
         throw new Exception($"Unsupported Status Packet ID: {id}");
     }
+    
+    public static IPacket ParseLogin(MemoryStream stream)
+    {
+        _ = VarInt.ReadFrom(stream);
+        var id = VarInt.ReadFrom(stream);
+        if (LoginServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
+        throw new Exception($"Unsupported Login Packet ID: {id}");
+    }
 }

@@ -14,8 +14,4 @@
       <ProjectReference Include="..\Blocks.Net.PacketSourceGenerator\Blocks.Net.PacketSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Login\ServerBound\" />
-    </ItemGroup>
-
 </Project>
