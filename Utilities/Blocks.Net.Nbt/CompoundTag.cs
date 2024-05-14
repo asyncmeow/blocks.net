@@ -1,4 +1,6 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Collections;
+using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -16,7 +18,7 @@ public sealed class CompoundTag : NbtTag
         var lastTagType = NbtTagType.Compound;
         while (lastTagType != NbtTagType.End)
         {
-            var nextTag = NbtTag.Read(stream);
+            var nextTag = Read(stream);
             ActualChildren.Add(nextTag);
             lastTagType = nextTag.TagType;
         }
@@ -119,7 +121,9 @@ public sealed class CompoundTag : NbtTag
         }
         if (i != ActualChildren.Count) ActualChildren.RemoveAt(i);
     }
-    
+
+
+    public IEnumerable<string> Keys => ActualChildren.Take(ActualChildren.Count - 1).Select(x => x.Name!);
 
     public override void WriteData(Stream stream)
     {
@@ -127,5 +131,43 @@ public sealed class CompoundTag : NbtTag
         {
             child.Write(stream);
         }
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        var otherCompound = (CompoundTag)other;
+        var keys = Keys.ToArray();
+        var otherKeys = otherCompound.Keys.ToArray();
+        if (keys.Length != otherKeys.Length) return false;
+        foreach (var key in keys)
+        {
+            if (!otherKeys.Contains(key)) return false;
+            if (!this[key].IsSameAs(otherCompound[key]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"Compound({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)}):\n").AppendRepeating(indentation, level).Append("{\n");
+        }
+        else
+        {
+            sb.Append("{\n");
+        }
+
+        for (var i = 0; i < ActualChildren.Count - 1; i++)
+        {
+            sb.AppendRepeating(indentation, level + 1);
+            ActualChildren[i].DumpImpl(sb, indentation, level + 1, true);
+            if (i != ActualChildren.Count - 2) sb.Append(',');
+            sb.Append('\n');
+        }
+        sb.AppendRepeating(indentation, level).Append('}');
     }
 }

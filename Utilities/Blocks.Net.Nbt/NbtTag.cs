@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -51,6 +52,23 @@ public abstract class NbtTag
             default:
                 throw new Exception($"Unexpected tag: {tag}");
         }
+    }
+
+    protected abstract bool IsSameImpl(NbtTag other);
+    
+    public bool IsSameAs(NbtTag other, bool compareNames=false)
+    {
+        if (other.TagType != TagType) return false;
+        if (compareNames && other.Name != Name) return false;
+        return IsSameImpl(other);
+    }
+
+    public abstract void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName);
+    public string Dump(string indentation="    ", bool dumpName=true)
+    {
+        var sb = new StringBuilder();
+        DumpImpl(sb, indentation,0,dumpName);
+        return sb.ToString();
     }
     
     // Now for some implicit operators meant for creating NBT tags quickly in a compound, or in lists (but you want to be explicit with typing for lists)

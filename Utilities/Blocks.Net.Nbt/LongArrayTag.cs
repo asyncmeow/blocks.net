@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -57,5 +58,33 @@ public sealed class LongArrayTag : NbtTag
             if (BitConverter.IsLittleEndian) bytes = [bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]];
             stream.Write(bytes);
         }
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        var otherLa = (LongArrayTag)other;
+        return otherLa.Data.SequenceEqual(Data);
+    }
+    
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"LongArray({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)})");
+        }
+        else
+        {
+            sb.Append($"LongArray");
+        }
+
+        sb.Append(":\n");
+        sb.AppendRepeating(indentation, level).Append("[\n");
+        for (var i = 0; i < Count; i++)
+        {
+            sb.AppendRepeating(indentation, level + 1).Append($"{this[i]}L");
+            if (i != Count - 1) sb.Append(',');
+            sb.Append('\n');
+        }
+        sb.AppendRepeating(indentation, level).Append(']');
     }
 }

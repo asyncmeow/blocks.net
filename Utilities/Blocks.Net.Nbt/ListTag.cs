@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
@@ -121,5 +122,41 @@ public sealed class ListTag : NbtTag, IEnumerable
         }
     }
 
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        var otherList = (ListTag)other;
+        if (otherList.Count == 0 && Count == 0) return true;
+        if (otherList.ChildType != ChildType) return false;
+        if (otherList.Count != Count) return false;
+        for (var i = 0; i < Count; i++)
+        {
+            if (!this[i].IsSameAs(otherList[i])) return false;
+        }
+        return true;
+    }
+
     public IEnumerator GetEnumerator() => Data.GetEnumerator();
+    
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"List({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)})");
+        }
+        else
+        {
+            sb.Append($"List");
+        }
+
+        sb.Append(":\n");
+        sb.AppendRepeating(indentation, level).Append("[\n");
+        for (var i = 0; i < Count; i++)
+        {
+            sb.AppendRepeating(indentation, level + 1);
+            this[i].DumpImpl(sb, indentation, level + 1, false);
+            if (i != Count - 1) sb.Append(',');
+            sb.Append('\n');
+        }
+        sb.AppendRepeating(indentation, level).Append(']');
+    }
 }

@@ -19,7 +19,7 @@ public static class StreamUtilities
         if (BitConverter.IsLittleEndian) bytes = [bytes[1], bytes[0]];
         var length = BitConverter.ToInt16(bytes);
         var stringBytes = new byte[length];
-        stream.ReadExactly(bytes);
+        stream.ReadExactly(stringBytes);
         var data = Encoding.UTF8.GetString(stringBytes);
         return data;
     }

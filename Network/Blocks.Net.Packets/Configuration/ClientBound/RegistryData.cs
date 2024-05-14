@@ -4,9 +4,10 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
+
 [PublicAPI]
-[Packet(0x01,true,"Configuration")]
-public partial class Disconnect : IPacket
+[Packet(0x05,true,"Configuration")]
+public partial class RegistryData : IPacket
 {
-    [PacketField] public NbtTag Reason;
+    [PacketField] public NbtTag RegistryCodec;
 }

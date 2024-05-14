@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -27,5 +28,19 @@ public sealed class ByteTag : NbtTag
     public override void WriteData(Stream stream)
     {
         stream.WriteByte((byte)Value);
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        return ((ByteTag)other).Value == Value;
+    }
+
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"Byte({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)}): ");
+        }
+        sb.Append($"{Value}b");
     }
 }

@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -26,5 +27,20 @@ public sealed class StringTag : NbtTag
     public override void WriteData(Stream stream)
     {
         stream.WriteLengthPrefixedString(Value);
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        return ((StringTag)other).Value == Value;
+    }
+
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"String({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)}): ");
+        }
+
+        sb.Append(System.Web.HttpUtility.JavaScriptStringEncode(Value,true));
     }
 }

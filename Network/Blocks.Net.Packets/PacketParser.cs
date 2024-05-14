@@ -30,4 +30,12 @@ public static partial class PacketParser
         if (LoginServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
         throw new Exception($"Unsupported Login Packet ID: {id}");
     }
+    
+    public static IPacket ParseConfiguration(MemoryStream stream)
+    {
+        _ = VarInt.ReadFrom(stream);
+        var id = VarInt.ReadFrom(stream);
+        if (ConfigurationServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
+        throw new Exception($"Unsupported Configuration Packet ID: {id}");
+    }
 }

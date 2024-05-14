@@ -1,4 +1,6 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using System.Text.RegularExpressions;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -50,5 +52,33 @@ public sealed class ByteArrayTag : NbtTag
         if (BitConverter.IsLittleEndian) bytes = [bytes[3], bytes[2], bytes[1], bytes[0]];
         stream.Write(bytes);
         stream.Write(Data.ToArray());
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        var otherBa = (ByteArrayTag)other;
+        return otherBa.Data.SequenceEqual(Data);
+    }
+
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"ByteArray({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)})");
+        }
+        else
+        {
+            sb.Append($"ByteArray");
+        }
+
+        sb.Append(":\n");
+        sb.AppendRepeating(indentation, level).Append("[\n");
+        for (var i = 0; i < Count; i++)
+        {
+            sb.AppendRepeating(indentation, level + 1).Append($"{this[i]}b");
+            if (i != Count - 1) sb.Append(',');
+            sb.Append('\n');
+        }
+        sb.AppendRepeating(indentation, level).Append(']');
     }
 }

@@ -23,7 +23,10 @@ public class PacketSourceGenerator : ISourceGenerator
         {"long","Long"},
         {"float","Float"},
         {"double","Blocks.Net.Packets.Primitives.Double"},
-        {"string","Blocks.Net.Packets.Primitives.String"}
+        {"string","Blocks.Net.Packets.Primitives.String"},
+        {"NbtTag","Blocks.Net.Packets.Primitives.Nbt"},
+        {"Guid","Blocks.Net.Packets.Primitives.Uuid"},
+        {"Uuid","Blocks.Net.Packets.Primitives.Uuid"},
     };    
     public void Execute(GeneratorExecutionContext context)
     {

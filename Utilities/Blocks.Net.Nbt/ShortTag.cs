@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Text;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
@@ -30,5 +31,19 @@ public class ShortTag : NbtTag
         var bytes = BitConverter.GetBytes(Value);
         if (BitConverter.IsLittleEndian) bytes = [bytes[1], bytes[0]];
         stream.Write(bytes);
+    }
+
+    protected override bool IsSameImpl(NbtTag other)
+    {
+        return ((ShortTag)other).Value == Value;
+    }
+    
+    public override void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName)
+    {
+        if (dumpName && Name != null)
+        {
+            sb.Append($"Short({System.Web.HttpUtility.JavaScriptStringEncode(Name,true)}): ");
+        }
+        sb.Append($"{Value}s");
     }
 }
