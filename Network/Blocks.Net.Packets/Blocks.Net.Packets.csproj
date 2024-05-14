@@ -7,11 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Handshake\" />
+      <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+      <ProjectReference Include="..\Blocks.Net.PacketSourceGenerator\Blocks.Net.PacketSourceGenerator.csproj" />
     </ItemGroup>
 
 </Project>
