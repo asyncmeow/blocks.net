@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets", "Netwo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets.Tests", "Network\Blocks.Net.Packets.Tests\Blocks.Net.Packets.Tests.csproj", "{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{79B9C372-1D19-4626-96B8-8455CF1F4F8B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Nbt", "Utilities\Blocks.Net.Nbt\Blocks.Net.Nbt.csproj", "{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,7 @@ Global
 		{494551F9-C91B-4560-896B-556FCD2571CD} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
+		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -45,5 +50,9 @@ Global
 		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
