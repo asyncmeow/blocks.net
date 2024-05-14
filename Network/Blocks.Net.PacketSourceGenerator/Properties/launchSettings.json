@@ -1,9 +1,13 @@
 ﻿{
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "DebugRoslynSourceGenerator": {
+    "DebugRoslyGeneratorAgainstSamples": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../PacketSourceGenerator.Sample/PacketSourceGenerator.Sample.csproj"
+      "targetProject": "../Blocks.Net.PacketSourceGenerator.Sample/Blocks.Net.PacketSourceGenerator.Sample.csproj"
+    },
+    "DebugRoslyGeneratorAgainstMain": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../Blocks.Net.Packets/Blocks.Net.Packets.csproj"
     }
   }
 }

@@ -4,7 +4,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 namespace Blocks.Net.Packets.Handshake;
 
 [Packet(0x00,false,"Handshaking")]
-public partial struct Handshake : IPacket
+public partial class Handshake : IPacket
 {
     public enum NextStateEnum
     {
@@ -12,8 +12,11 @@ public partial struct Handshake : IPacket
         Login = 2
     }
     
+    
+    
     [PacketField] public VarInt ProtocolVersion;
     [PacketField] public string ServerAddress;
     [PacketField] public ushort ServerPort;
-    [PacketField] public NextStateEnum NextState;
+    [PacketEnum(typeof(VarInt))] public NextStateEnum NextState;
+
 }
