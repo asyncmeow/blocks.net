@@ -1,8 +1,9 @@
-﻿using Blocks.Net.Nbt.Utilities;
+﻿using System.Collections;
+using Blocks.Net.Nbt.Utilities;
 
 namespace Blocks.Net.Nbt;
 
-public sealed class ListTag : NbtTag
+public sealed class ListTag : NbtTag, IEnumerable
 {
     public override NbtTagType TagType => NbtTagType.List;
     public override string? Name { get; set; }
@@ -69,18 +70,26 @@ public sealed class ListTag : NbtTag
         stream.ReadExactly(bytes);
         if (BitConverter.IsLittleEndian) bytes = [bytes[3], bytes[2], bytes[1], bytes[0]];
         var length = BitConverter.ToInt32(bytes);
+        Func<NbtTag> constructor = ChildType switch
+        {
+            NbtTagType.End => () => new EndTag(),
+            NbtTagType.Byte => () => new ByteTag(stream,false),
+            NbtTagType.Short => () => new ShortTag(stream,false),
+            NbtTagType.Int => () => new IntTag(stream,false),
+            NbtTagType.Long => () => new LongTag(stream,false),
+            NbtTagType.Float => () => new FloatTag(stream,false),
+            NbtTagType.Double => () => new DoubleTag(stream,false),
+            NbtTagType.ByteArray => () => new ByteTag(stream,false),
+            NbtTagType.String => () => new StringTag(stream,false),
+            NbtTagType.List => () => new ListTag(stream,false),
+            NbtTagType.Compound => () => new CompoundTag(stream,false),
+            NbtTagType.IntArray => () => new IntArrayTag(stream,false),
+            NbtTagType.LongArray => () => new LongArrayTag(stream,false),
+            _ => throw new ArgumentOutOfRangeException()
+        };
         for (var i = 0; i < length; i++)
         {
-            var tag = Read(stream, false);
-            if (tag.TagType != ChildType)
-            {
-                if (ChildType == NbtTagType.End) ChildType = tag.TagType;
-                else throw new Exception($"Invalid child tag in list({ChildType}) - {tag.TagType}");
-            }
-            else
-            {
-                Data.Add(tag);
-            }
+            Data.Add(constructor());
         }
     }
 
@@ -108,7 +117,9 @@ public sealed class ListTag : NbtTag
         stream.Write(bytes);
         foreach (var child in Data)
         {
-            child.Write(stream, false);
+            child.WriteData(stream);
         }
     }
+
+    public IEnumerator GetEnumerator() => Data.GetEnumerator();
 }

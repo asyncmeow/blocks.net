@@ -4,7 +4,7 @@ namespace Blocks.Net.Nbt;
 
 public sealed class FloatTag : NbtTag
 {
-    public override NbtTagType TagType => NbtTagType.Short;
+    public override NbtTagType TagType => NbtTagType.Float;
     public override string? Name { get; set; }
     public override NbtTag[] Children => [];
     public float Value;

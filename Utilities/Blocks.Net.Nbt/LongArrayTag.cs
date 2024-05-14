@@ -4,7 +4,7 @@ namespace Blocks.Net.Nbt;
 
 public sealed class LongArrayTag : NbtTag
 {
-    public override NbtTagType TagType => NbtTagType.IntArray;
+    public override NbtTagType TagType => NbtTagType.LongArray;
     public override string? Name { get; set; }
     public override NbtTag[] Children => [];
 

@@ -25,7 +25,7 @@ public sealed class CompoundTag : NbtTag
     public CompoundTag(string? name=null, IEnumerable<NbtTag>? compound = null)
     {
         Name = name;
-        ActualChildren = compound?.Append(new EndTag()).ToList() ?? [];
+        ActualChildren = compound?.Append(new EndTag()).ToList() ?? [new EndTag()];
     }
 
     /// <summary>

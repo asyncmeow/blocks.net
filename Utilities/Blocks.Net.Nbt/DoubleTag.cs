@@ -4,7 +4,7 @@ namespace Blocks.Net.Nbt;
 
 public sealed class DoubleTag : NbtTag
 {
-    public override NbtTagType TagType => NbtTagType.Short;
+    public override NbtTagType TagType => NbtTagType.Double;
     public override string? Name { get; set; }
     public override NbtTag[] Children => [];
     public double Value;

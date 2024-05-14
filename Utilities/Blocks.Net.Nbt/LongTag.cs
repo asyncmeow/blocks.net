@@ -4,7 +4,7 @@ namespace Blocks.Net.Nbt;
 
 public sealed class LongTag : NbtTag
 {
-    public override NbtTagType TagType => NbtTagType.Short;
+    public override NbtTagType TagType => NbtTagType.Long;
     public override string? Name { get; set; }
     public override NbtTag[] Children => [];
     public long Value;
