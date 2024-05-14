@@ -10,8 +10,16 @@ public static partial class PacketParser
     public static IPacket ParseHandshaking(MemoryStream stream)
     {
         _ = VarInt.ReadFrom(stream);
-        var id = stream.CheckedReadByte();
+        var id = VarInt.ReadFrom(stream);
         if (HandshakingServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
         throw new Exception($"Unsupported Handshaking Packet ID: {id}");
+    }    
+    
+    public static IPacket ParseStatus(MemoryStream stream)
+    {
+        _ = VarInt.ReadFrom(stream);
+        var id = VarInt.ReadFrom(stream);
+        if (StatusServerBoundPackets.TryGetValue(id, out var cons)) return cons(stream);
+        throw new Exception($"Unsupported Status Packet ID: {id}");
     }
 }

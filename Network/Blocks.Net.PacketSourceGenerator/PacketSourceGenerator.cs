@@ -36,7 +36,7 @@ public class PacketSourceGenerator : ISourceGenerator
         // {
         // }
         context.AddSource("Packet.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]\npublic class Packet(byte id, bool clientBound = true, string state = \"Play\") : Attribute;");
+            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]\npublic class Packet(int id, bool clientBound = true, string state = \"Play\") : Attribute;");
         context.AddSource("PacketArrayField.g.cs",
             "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n/// <summary>\n/// Used on arrays of primitive types, or structs, or fielded enums.\n/// </summary>\n/// <param name=\"arraySizeControl\">An expression resulting in a value convertible to an int for the size of the array to read</param>\n[AttributeUsage(AttributeTargets.Field)]\npublic class PacketArrayField(string arraySizeControl) : Attribute;");
         context.AddSource("PacketField.g.cs",
@@ -48,7 +48,7 @@ public class PacketSourceGenerator : ISourceGenerator
         context.AddSource("PacketEnum.g.cs","namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n/// <summary>\n/// Used on enum fields to determine the actual packet primitive type of the field\n/// </summary>\n/// <param name=\"EnumType\">The primitive type of the enum</param>\n[AttributeUsage(AttributeTargets.Field)]\npublic class PacketEnum(Type EnumType) : Attribute;");
         
         
-        Dictionary<string, Dictionary<byte, string>> serverBoundPackets = [];
+        Dictionary<string, Dictionary<int, string>> serverBoundPackets = [];
         var foundPacketParser = false;
 
 
@@ -125,6 +125,23 @@ public class PacketSourceGenerator : ISourceGenerator
                             AddEnumFieldWrite(writeSb, name, targetType, primitiveType);
                             fields.Add(name);
                         }
+
+                        if (fieldAttrs.FirstOrDefault(a =>
+                                a.DescendantTokens().Any(dt => CheckForPacketArrayFieldAttribute(dt, semanticModel))) is
+                            { } arrayAttr)
+                        {
+                            var descendantTokens = arrayAttr.DescendantTokens().ToArray();
+                            var stringNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.StringLiteralToken));
+                            var stringValue = (string)stringNode.Value!;
+                            // We want to remove the [] from the target type here, as we know that will be there
+                            var targetTypeSubType = targetType.Substring(0, targetType.Length - 2);
+                            var primitiveSubType = PrimitiveRemap.TryGetValue(targetTypeSubType, out var primSubType)
+                                ? primSubType
+                                : targetTypeSubType;
+                            AddArrayFieldRead(readFromSb, name, targetTypeSubType, primitiveSubType, stringValue);
+                            AddArrayFieldWrite(writeSb, name, targetTypeSubType, primitiveSubType, stringValue);
+                            fields.Add(name);
+                        }
                     }
                     
                     EndReadFrom(sb, readFromSb, fields.ToArray());
@@ -135,7 +152,7 @@ public class PacketSourceGenerator : ISourceGenerator
                         var dict = serverBoundPackets.TryGetValue(state, out var d)
                             ? d
                             : serverBoundPackets[state] = [];
-                        dict[(byte)packetId] = $"{namespaceName}.{className}";
+                        dict[packetId] = $"{namespaceName}.{className}";
                     }
                     context.AddSource($"{namespaceName}.{className}.g.cs", StopPacketClass(sb));
                 }
@@ -159,10 +176,10 @@ public class PacketSourceGenerator : ISourceGenerator
                 var delegates = kvp.Value;
                 // Now lets create the dictionary
                 sb.Append(
-                    $"    public static Dictionary<byte,Func<MemoryStream,IPacket>> {state}ServerBoundPackets = new()\n    {{\n");
+                    $"    public static Dictionary<int,Func<MemoryStream,IPacket>> {state}ServerBoundPackets = new()\n    {{\n");
                 foreach (var kvp2 in delegates)
                 {
-                    sb.Append($"        {{0x{kvp2.Key:X2},{kvp2.Value}.ReadFrom}}\n");
+                    sb.Append($"        {{0x{kvp2.Key:X},{kvp2.Value}.ReadFrom}},\n");
                 }
 
                 sb.Append("    };\n");
@@ -199,8 +216,16 @@ public class PacketSourceGenerator : ISourceGenerator
         return name == "PacketEnum";
     }
     
-    
-    public StringBuilder StartPacketClass(string ns, string className, int id)
+    private bool CheckForPacketArrayFieldAttribute(SyntaxToken token, SemanticModel semanticModel)
+    {
+        if (!token.IsKind(SyntaxKind.IdentifierToken)) return false;
+        // var name = semanticModel.GetTypeInfo(token.Parent!).Type?.Name;
+        var name = semanticModel.GetTypeInfo(token.Parent!).Type?.Name;
+        // Console.WriteLine($"Found field attribute of type: {name}");
+        return name == "PacketArrayField";
+    }
+
+    private StringBuilder StartPacketClass(string ns, string className, int id)
     {
         var namespaceName = ns;
         StringBuilder sb = new();
@@ -209,7 +234,7 @@ public class PacketSourceGenerator : ISourceGenerator
         if (!string.IsNullOrEmpty(ns)) sb.Append($"namespace {namespaceName};\n");
 
         sb.Append($"partial class {className} {{\n");
-        sb.Append($"    public byte PacketId => 0x{id:x2};\n");
+        sb.Append($"    public int PacketId => 0x{id:X};\n");
 
         return sb;
     }
@@ -232,9 +257,22 @@ public class PacketSourceGenerator : ISourceGenerator
             ? $"        var {fieldName} = {targetType}.ReadFrom(stream);\n"
             : $"        var {fieldName} = ({targetType}){primitiveType}.ReadFrom(stream);\n");
 
-    public void AddEnumFieldRead(StringBuilder sb, string fieldName, string enumType, string primitiveType) =>
+    private void AddEnumFieldRead(StringBuilder sb, string fieldName, string enumType, string primitiveType) =>
         sb.Append($"        var {fieldName} = ({enumType})({primitiveType}.ReadFrom(stream).Value);\n");
 
+    private void AddArrayFieldRead(StringBuilder sb, string fieldName, string targetSubType, string primitiveSubType,
+        string lengthControl)
+    {
+        var lengthVarName = $"__{fieldName}_length__";
+        var iterVarName = $"__{fieldName}_iter__";
+        sb.Append($"        int {lengthVarName} = {lengthControl};\n");
+        sb.Append($"        var {fieldName} = new {targetSubType}[{lengthVarName}];\n");
+        sb.Append($"        for (var {iterVarName} = 0; {iterVarName} < {lengthVarName}; {iterVarName}++) {{\n");
+        sb.Append(
+            $"            {fieldName}[{iterVarName}] = {(targetSubType == primitiveSubType ? $"{primitiveSubType}.ReadFrom(stream)" : $"({targetSubType}){primitiveSubType}.ReadFrom(stream)")};\n");
+        sb.Append($"        }}\n");
+    }
+    
     private void EndReadFrom(StringBuilder classBuilder, StringBuilder sb, string[] fieldNames)
     {
         sb.Append("        return new() {\n");
@@ -265,6 +303,17 @@ public class PacketSourceGenerator : ISourceGenerator
     private void AddEnumFieldWrite(StringBuilder sb, string fieldName, string enumType, string primitiveType) =>
         sb.Append($"        (({primitiveType})(int){fieldName}).WriteTo(stream);\n");
 
+    private void AddArrayFieldWrite(StringBuilder sb, string fieldName, string targetSubType, string primitiveSubType,
+        string lengthControl)
+    {
+        var lengthVarName = $"__{fieldName}_length__";
+        var iterVarName = $"__{fieldName}_iter__";
+        sb.Append($"        int {lengthVarName} = {lengthControl};\n");
+        sb.Append($"        for (var {iterVarName} = 0; {iterVarName} < {lengthVarName}; {iterVarName}++) {{\n");
+        sb.Append($"            {(targetSubType == primitiveSubType ? $"{fieldName}[{iterVarName}]" : $"(({primitiveSubType}){fieldName}[{iterVarName}])")}.WriteTo(stream);\n");
+        sb.Append($"        }}\n");
+    }
+    
     private void EndWrite(StringBuilder classBuilder, StringBuilder sb)
     {
         sb.Append("    }\n");

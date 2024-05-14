@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Primitives;
 
 [PublicAPI]
-public class String(string v)
+public struct String(string v)
 {
     public string Value => v;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

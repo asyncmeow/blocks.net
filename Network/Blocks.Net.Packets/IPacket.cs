@@ -17,7 +17,7 @@ public partial interface IPacket
     /// <summary>
     /// Returns the ID of this packet
     /// </summary>
-    public byte PacketId { get; }
+    public int PacketId { get; }
     
     // Once both of those are source genned uncomment the calls in this
     

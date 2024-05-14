@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Primitives;
 
 [PublicAPI]
-public class UnsignedShort(ushort v)
+public struct UnsignedShort(ushort v)
 {
     public ushort Value => v;
 
