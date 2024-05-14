@@ -1,17 +1,12 @@
 ﻿namespace Blocks.Net.Nbt;
 
-public class EndTag : INbtTag
+public class EndTag : NbtTag
 {
-    public NbtTagType TagType => NbtTagType.End;
-    public string? Name => null;
-    public INbtTag[] Children => [];
-    public void WriteNetwork(MemoryStream stream)
-    {
-        stream.WriteByte((byte)TagType);
-    }
+    public override NbtTagType TagType => NbtTagType.End;
+    public override string? Name { get; set; } = null;
+    public override NbtTag[] Children => [];
 
-    public void Write(MemoryStream stream)
+    public override void WriteData(Stream stream)
     {
-        stream.WriteByte((byte)TagType);
     }
 }

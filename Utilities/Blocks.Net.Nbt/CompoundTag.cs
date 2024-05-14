@@ -2,33 +2,38 @@
 
 namespace Blocks.Net.Nbt;
 
-public class CompoundTag : INbtTag
+public sealed class CompoundTag : NbtTag
 {
-    public NbtTagType TagType => NbtTagType.Compound;
-    public string? Name { get; }
+    public override NbtTagType TagType => NbtTagType.Compound;
+    public override string? Name { get; set; }
 
-    public readonly List<INbtTag> ActualChildren = [];
-    public INbtTag[] Children => ActualChildren.ToArray();
+    public readonly List<NbtTag> ActualChildren = [];
+    public override NbtTag[] Children => ActualChildren.ToArray();
 
-    public CompoundTag(MemoryStream stream, bool readName=true)
+    public CompoundTag(Stream stream, bool readName=true)
     {
         Name = readName ? stream.ReadLengthPrefixedString() : null;
         var lastTagType = NbtTagType.Compound;
         while (lastTagType != NbtTagType.End)
         {
-            var nextTag = INbtTag.Read(stream);
+            var nextTag = NbtTag.Read(stream);
             ActualChildren.Add(nextTag);
             lastTagType = nextTag.TagType;
         }
     }
 
-    public CompoundTag(string? name=null, IEnumerable<INbtTag>? compound = null)
+    public CompoundTag(string? name=null, IEnumerable<NbtTag>? compound = null)
     {
         Name = name;
         ActualChildren = compound?.Append(new EndTag()).ToList() ?? [];
     }
 
-    public INbtTag this[string key]
+    /// <summary>
+    /// Index the compound tag
+    /// </summary>
+    /// <param name="key">The NBT tag name</param>
+    /// <exception cref="KeyNotFoundException">If the corresponding NBT tag is not found when reading</exception>
+    public NbtTag this[string key]
     {
         get
         {
@@ -41,6 +46,7 @@ public class CompoundTag : INbtTag
         }
         set
         {
+            value.Name = key;
             // Now we must do some list modification
             // Order will *not* be preserved
             int i;
@@ -61,12 +67,38 @@ public class CompoundTag : INbtTag
         }
     }
 
-    public bool TryAdd(string key, INbtTag value)
-    {
-        
-    }
     
-    public bool TryGet(string key, out INbtTag value)
+    public bool TryAdd(string key, NbtTag value)
+    {
+        value.Name = key;
+        int i;
+        for (i = 0; i < ActualChildren.Count; i++)
+        {
+            if (ActualChildren[i].Name == key) break;
+        }
+        if (i != ActualChildren.Count) return false;
+        ActualChildren[i - 1] = value;
+        ActualChildren.Add(new EndTag());
+        return true;
+    }
+
+    public void Add(string key, NbtTag value)
+    {
+        value.Name = key;
+        int i;
+        for (i = 0; i < ActualChildren.Count; i++)
+        {
+            if (ActualChildren[i].Name == key) break;
+        }
+        if (i != ActualChildren.Count) throw new ArgumentException(key);
+        ActualChildren[i - 1] = value;
+        ActualChildren.Add(new EndTag());
+    }
+
+    public bool TryAdd(NbtTag value) => TryAdd(value.Name!, value);
+    public void Add(NbtTag value) => Add(value.Name!, value);
+    
+    public bool TryGet(string key, out NbtTag value)
     {
         foreach (var child in ActualChildren.Where(child => child.Name == key))
         {
@@ -88,19 +120,9 @@ public class CompoundTag : INbtTag
         if (i != ActualChildren.Count) ActualChildren.RemoveAt(i);
     }
     
-    public void WriteNetwork(MemoryStream stream)
-    {
-        stream.WriteByte((byte)TagType);
-        foreach (var child in ActualChildren)
-        {
-            child.Write(stream);
-        }
-    }
 
-    public void Write(MemoryStream stream)
+    public override void WriteData(Stream stream)
     {
-        stream.WriteByte((byte)TagType);
-        stream.WriteLengthPrefixedString(Name!);
         foreach (var child in ActualChildren)
         {
             child.Write(stream);
