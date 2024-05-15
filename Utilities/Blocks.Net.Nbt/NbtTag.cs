@@ -71,8 +71,14 @@ public abstract class NbtTag
         return sb.ToString();
     }
     
+    // TODO: ToSNbt() function
+
+    public string SNbt => throw new NotImplementedException();
+    
     // Now for some implicit operators meant for creating NBT tags quickly in a compound, or in lists (but you want to be explicit with typing for lists)
     // This is also the reason that compounds set tag names as well
+
+    public static implicit operator NbtTag(bool value) => new ByteTag(null, value ? (sbyte)1 : (sbyte)0);
     public static implicit operator NbtTag(sbyte value) => new ByteTag(null, value);
     public static implicit operator NbtTag(short value) => new ShortTag(null, value);
     public static implicit operator NbtTag(int value) => new IntTag(null, value);
