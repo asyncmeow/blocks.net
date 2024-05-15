@@ -12,7 +12,7 @@ public class HoverText(TextComponent toBeShown) : HoverEvent
         return new JsonObject
         {
             ["action"] = "show_text",
-            ["content"] = toBeShown.ToJson()
+            ["content"] = toBeShown.ToJson(true)
         };
     }
 

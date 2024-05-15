@@ -28,7 +28,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         Configuration
     }
     // We want to make a very shitty server that can only handle one client at a time
-    public TcpListener Listener = new(address, port);
+    // public TcpListener Listener = new(address, port);
     public ConnectionState State = ConnectionState.Handshake;
 
     public DateTime ConfigStateEnteredAt;
@@ -37,7 +37,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
     {
         Console.WriteLine("Beginning packet read!");
         var length = VarInt.ReadFrom(stream);
-        Console.WriteLine($"Packet length is: {length.Value}");
+        // Console.WriteLine($"Packet length is: {length.Value}");
         var result = new MemoryStream();
         length.WriteTo(result);
         int lengthInt = length;
@@ -49,12 +49,13 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         }
         result.Write(buffer);
         result.Seek(0, SeekOrigin.Begin);
-        Console.WriteLine("Ending packet read!");
-        Console.WriteLine("Packet dump:");
-        for (int i = 0; i < lengthInt; i++)
-        {
-            Console.WriteLine($"\t{buffer[i]:X2}");
-        }
+        var arr = result.ToArray();
+        // Console.WriteLine("Ending packet read!");
+        // Console.WriteLine("Packet dump:");
+        // for (int i = 0; i < arr.Length; i++)
+        // {
+        //     Console.WriteLine($"\t{arr[i]:X2}");
+        // }
         return result;
     }
     
@@ -75,25 +76,50 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                     ["online"] = 0,
                     ["sample"] = new JsonArray()
                 },
-                ["description"] = motd.ToJson()
+                // ["description"] = JsonNode.Parse(motd.ToJson().ToJsonString())!
                 ["enforcesSecureChat"] = false,
                 ["previewsChat"] = false
             };
+            var motdJson = motd.ToJson();
+            jn["description"] = motdJson;
             return jn.ToJsonString();
         }
+    }
+
+    public Stream CurrentStream;
+
+    public void WritePacket(IPacket packet)
+    {
+        Console.WriteLine($"Sending packet: {packet}");
+        // using var memStream = new MemoryStream();
+        // packet.WriteToStream(memStream);
+        // var arr = memStream.ToArray();
+        // for (var i = 0; i < arr.Length; i++)
+        // {
+        //     Console.WriteLine($"\t{arr[i]:x2}");
+        // }
+        //
+        // memStream.Seek(0, SeekOrigin.Begin);
+        // memStream.CopyTo(CurrentStream);
+        packet.WriteToStream(CurrentStream);
     }
     
     public void Run()
     {
-        Listener.Start();
+        // Listener.Start();
+        using Socket listener = new(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        listener.Bind(new IPEndPoint(address, port));
+        listener.Listen(port);
         Console.WriteLine("Waiting for initial client");
         while (true)
         {
-            using var client = Listener.AcceptTcpClient();
-            Console.WriteLine($"Accepted new client: {client}");
-            using var stream = client.GetStream();
+            var handler = listener.Accept();
+            // using var client = Listener.AcceptTcpClient();
+            Console.WriteLine($"Accepted new client: {handler}");
+            using var stream = new NetworkStream(handler);
+            CurrentStream = stream;
             
-            while (client.Connected)
+            while (handler.Connected)
             {
                 if (!stream.DataAvailable)
                 {
@@ -107,6 +133,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                         }).WriteToStream(stream);
                         break;
                     }
+                    continue;
                 }
                 using var message = ReadMessage(stream);
                 try
@@ -117,18 +144,23 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                             HandleHandshakeMessage(message);
                             break;
                         case ConnectionState.Status:
-                            HandleStatusMessage(message, stream);
+                            if (HandleStatusMessage(message, stream))
+                            {
+                                stream.Close();
+                                handler.Shutdown(SocketShutdown.Both);
+                                handler.Close();
+                            }
                             break;
                         case ConnectionState.Login:
                             HandleLoginMessage(message, stream);
                             break;
                         case ConnectionState.Configuration:
-                            
+                            HandleConfigurationMessage(message, stream);
                             break;
                         default:
                             Console.WriteLine($"Disconnecting client due to being in invalid state: {State}");
                             stream.Close();
-                            client.Close();
+                            handler.Close();
                             goto reset;
                     }
                 }
@@ -136,7 +168,8 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 {
                     Console.WriteLine($"Disconnecting client due to the following error:\n\t{e}");
                     stream.Close();
-                    client.Close();
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Close();
                     break;
                 }
             }
@@ -166,7 +199,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         else throw new Exception($"Unsupported handshaking packet type: {packet.GetType()}");
     }
 
-    public void HandleStatusMessage(MemoryStream message, NetworkStream ns)
+    public bool HandleStatusMessage(MemoryStream message, NetworkStream ns)
     {
         var packet = PacketParser.ParseStatus(message);
         switch (packet)
@@ -174,20 +207,22 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
             case StatusRequest statusRequest:
                 Console.WriteLine("Client sent status request");
                 Console.WriteLine($"Responding with status {Status}");
-                ((IPacket)new StatusResponse
+                WritePacket(new StatusResponse
                 {
                     JsonResponse = Status
-                }).WriteToStream(ns);
-                break;
+                });
+                return false;
             case PingRequest pingRequest:
-                ((IPacket)new PingResponse
+                Console.WriteLine("PING!");
+                WritePacket(new PingResponse
                 {
                     Payload = pingRequest.Payload
-                }).WriteToStream(ns);
-                break;
+                });
+                Console.WriteLine("PONG!");
+                return true;
             default:
                 Console.WriteLine($"Client sent unsupported status packet: {packet.GetType()}");
-                break;
+                return false;
         }
     }
 
@@ -199,17 +234,18 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
             case LoginStart loginStart:
                 Console.WriteLine("Client wants to log in:");
                 Console.WriteLine($"\tUsername: {loginStart.Username}");
-                Console.WriteLine($"\tUUID: {loginStart.PlayerUuid}");
-                ((IPacket)new LoginSuccess
+                Console.WriteLine($"\tUUID: {loginStart.PlayerUuid.Value}");
+                WritePacket(new LoginSuccess
                 {
                     PlayerUuid = loginStart.PlayerUuid,
                     Username = loginStart.Username,
                     NumProperties = 0,
                     PlayerProperties = []
-                }).WriteToStream(ns);
+                });
                 break;
             case LoginAcknowledged:
                 Console.WriteLine("Client has acknowledged login");
+                ConfigStateEnteredAt = DateTime.Now;
                 State = ConnectionState.Configuration;
                 break;
             default:
@@ -225,15 +261,18 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         {
             case PluginMessage pluginMessage:
                 // Now we must respond with our own
-                Console.WriteLine($"Received plugin message on channel {pluginMessage.Channel}");
-                switch (pluginMessage.Channel)
                 {
-                    case "minecraft:brand":
-                        Console.WriteLine($"Client Brand: {Encoding.UTF8.GetString(pluginMessage.Data)}");
-                        break;
-                    default:
-                        Console.WriteLine("Unsupported channel");
-                        break;
+                    Console.WriteLine($"Received plugin message on channel {pluginMessage.Channel}");
+                    using var channelStream = new MemoryStream(pluginMessage.Data.Value);
+                    switch (pluginMessage.Channel)
+                    {
+                        case "minecraft:brand":
+                            Console.WriteLine($"Client Brand: {Packets.Primitives.String.ReadFrom(channelStream).Value}");
+                            break;
+                        default:
+                            Console.WriteLine("Unsupported channel");
+                            break;
+                    }
                 }
                 break;
             case ClientInformation clientInformation:
@@ -242,14 +281,19 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 Console.WriteLine($"\tView Distance: {clientInformation.ViewDistance}");
                 Console.WriteLine($"\tChat Mode: {clientInformation.ChatMode}");
                 Console.WriteLine($"\tChat Colors: {clientInformation.ChatColors}");
-                Console.WriteLine($"\tDisplayed Skin Parts: {clientInformation.SkinParts:X2}");
+                Console.WriteLine($"\tDisplayed Skin Parts: {clientInformation.SkinParts:X}");
                 Console.WriteLine($"\tEnable Text Filtering: {clientInformation.EnableTextFiltering}");
                 Console.WriteLine($"\tAllow Server Listings: {clientInformation.AllowServerListings}");
-                ((IPacket)new Blocks.Net.Packets.Configuration.ClientBound.PluginMessage
                 {
-                    Channel = "minecraft:brand",
-                    Data = "blocks.net"u8.ToArray()
-                }).WriteToStream(ns);
+                    using var channelStream = new MemoryStream();
+                    Packets.Primitives.String brand = "blocks.net";
+                    brand.WriteTo(channelStream);
+                    WritePacket(new Blocks.Net.Packets.Configuration.ClientBound.PluginMessage
+                    {
+                        Channel = "minecraft:brand",
+                        Data = channelStream.ToArray()
+                    });
+                }
                 break;
             default:
                 Console.WriteLine($"Client sent unsupported configuration packet: {packet.GetType()}");

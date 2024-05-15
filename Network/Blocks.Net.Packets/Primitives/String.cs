@@ -26,10 +26,14 @@ public struct String(string v)
     {
         var length = (int)VarInt.ReadFrom(stream);
         using var reader = new BinaryReader(stream, Encoding.Unicode, true);
+        var oldPosition = stream.Position;
         var readLength = Math.Min(3 * length, (int)(stream.Length - stream.Position));
         var bytes = reader.ReadBytes(readLength);
         var chars = Encoding.UTF8.GetChars(bytes);
         if (chars.Length < length) throw new Exception("Could not find enough UTF8 chars!");
-        return new string(chars[..length]);
+        var str = new string(chars[..length]);
+        var bc = Encoding.UTF8.GetByteCount(str);
+        stream.Seek(oldPosition + bc, SeekOrigin.Begin);
+        return str;
     }
 }

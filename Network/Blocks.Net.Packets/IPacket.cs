@@ -28,10 +28,11 @@ public partial interface IPacket
     public void WriteToStream(Stream stream)
     {
         using var subStream = new MemoryStream();
-        // subStream.WriteByte(PacketId);
-        // Write(subStream)
+        ((VarInt)PacketId).WriteTo(subStream);
+        Write(subStream);
         VarInt length = (int)subStream.Length;
         length.WriteTo(stream);
+        subStream.Seek(0, SeekOrigin.Begin);
         subStream.CopyTo(stream);
     }
 }

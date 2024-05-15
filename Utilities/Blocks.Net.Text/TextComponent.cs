@@ -44,9 +44,9 @@ public class TextComponent
                                          Font == null && Insertion == null && ClickEvent == null &&
                                          HoverEvent == null && Children.Count == 0;
     
-    public JsonNode ToJson()
+    public JsonNode ToJson(bool force=false)
     {
-        if (IsSimpleTextComponent) return Text ?? "";
+        if (IsSimpleTextComponent && !force) return Text ?? "";
         var json = new JsonObject();
         switch (Type)
         {
@@ -218,6 +218,8 @@ public class TextComponent
             Type = ComponentType.Text,
             Text = text
         };
+
+    public static implicit operator TextComponent(string text) => CreateText(text);
 
     public static TextComponent CreateTranslatable(string translate, params TextComponent[] with) =>
         new()

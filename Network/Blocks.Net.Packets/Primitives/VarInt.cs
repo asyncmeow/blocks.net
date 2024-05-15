@@ -40,7 +40,6 @@ public struct VarInt(int v)
         var position = 0;
         while (true)
         {
-            Console.WriteLine("VarInt reading byte");
             var currentByte = stream.CheckedReadByte();
             value |= (currentByte & SegmentBits) << position;
 
