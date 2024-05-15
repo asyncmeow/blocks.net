@@ -1,11 +1,13 @@
 ﻿using Blocks.Net.Nbt;
+using JetBrains.Annotations;
 
 namespace Blocks.Net.Text;
 
+[PublicAPI]
 public class ClickEvent
 {
-    public string Action;
-    public string Value;
+    public string Action = "";
+    public string Value = "";
 
     public string ToJson() =>
         $"{{\"action\":{System.Web.HttpUtility.JavaScriptStringEncode(Action, true)},\"value\":{System.Web.HttpUtility.JavaScriptStringEncode(Value, true)}}}";
