@@ -18,7 +18,7 @@ public struct Nbt(NbtTag v)
 
     public static Nbt ReadFrom(MemoryStream stream) => NbtTag.Read(stream, false);
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         v.Write(stream, false);
     }

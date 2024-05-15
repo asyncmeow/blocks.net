@@ -16,7 +16,7 @@ public struct UnsignedByte(byte v)
     public static implicit operator UnsignedByte(byte v) => new(v);
 
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         stream.WriteByte(v);
     }

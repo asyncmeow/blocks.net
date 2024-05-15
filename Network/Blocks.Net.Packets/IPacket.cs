@@ -25,13 +25,13 @@ public partial interface IPacket
     /// Writes the packet to a memory stream (with it's ID and length)
     /// </summary>
     /// <param name="stream">The stream to write the packet to</param>
-    public void WriteToStream(MemoryStream stream)
+    public void WriteToStream(Stream stream)
     {
         using var subStream = new MemoryStream();
         // subStream.WriteByte(PacketId);
         // Write(subStream)
         VarInt length = (int)subStream.Length;
         length.WriteTo(stream);
-        stream.Write(subStream.ToArray());
+        subStream.CopyTo(stream);
     }
 }

@@ -44,7 +44,7 @@ public struct Uuid(Guid v)
         return new Guid(bytes);
     }
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var bytes = v.ToByteArray();
         // Do some bit fanangling cuz guids are stored oddly (first 3 parts are stored LE, and last 2 parts BE)

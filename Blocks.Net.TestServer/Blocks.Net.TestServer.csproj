@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Network\Blocks.Net.Packets\Blocks.Net.Packets.csproj" />
+      <ProjectReference Include="..\Utilities\Blocks.Net.Nbt\Blocks.Net.Nbt.csproj" />
+      <ProjectReference Include="..\Utilities\Blocks.Net.Text\Blocks.Net.Text.csproj" />
+    </ItemGroup>
+
+</Project>

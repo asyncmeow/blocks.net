@@ -24,7 +24,7 @@ public struct LengthInferredByteArray(byte[] v)
         return data;
     }
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         stream.Write(v);
     }

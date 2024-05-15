@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Nodes;
 using Blocks.Net.Nbt;
 
 namespace Blocks.Net.Text;
@@ -10,21 +11,27 @@ public class HoverItem(string id, int count=1,NbtTag? tag=null) : HoverEvent
     public NbtTag? Tag => tag;
 
 
-    public override string ToJson()
+    public override JsonNode ToJson()
     {
-        var sb = new StringBuilder();
-        sb.Append(
-            $"{{\"action\":\"show_item\",\"content\":{{\"id\":{System.Web.HttpUtility.JavaScriptStringEncode(id, true)}");
+        var content = new JsonObject
+        {
+            ["id"] = id
+        };
         if (count != 1)
         {
-            sb.Append($",\"count\":{count}");
+            content["count"] = count;
         }
+
         if (tag != null)
         {
-            sb.Append($",\"tag\":{tag.SNbt}");
+            content["tag"] = tag.SNbt;
         }
-        sb.Append("}}");
-        return sb.ToString();
+
+        return new JsonObject
+        {
+            ["action"] = "show_item",
+            ["content"] = content
+        };
     }
 
     public override NbtTag ToNbt()

@@ -17,7 +17,7 @@ public struct VarLong(long v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator VarLong(long v) => new(v);
     
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var value = (ulong)v;
         while (true) {

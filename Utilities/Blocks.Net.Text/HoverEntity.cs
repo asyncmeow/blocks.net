@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Nodes;
 using Blocks.Net.Nbt;
 
 namespace Blocks.Net.Text;
@@ -8,18 +9,23 @@ public class HoverEntity(string type, Guid uuid, string? name = null) : HoverEve
     public string Type => type;
     public Guid Uuid => uuid;
     public string? Name => name;
-    public override string ToJson()
+    public override JsonNode ToJson()
     {
-        var sb = new StringBuilder();
-        sb.Append(
-            $"{{\"action\":\"show_entity\",\"content\":{{\"type\":{System.Web.HttpUtility.JavaScriptStringEncode(Type, true)}");
-            sb.Append($",\"uuid\":{System.Web.HttpUtility.JavaScriptStringEncode(uuid.ToString(),true)}");
+        var content = new JsonObject
+        {
+            ["type"] = Type,
+            ["uuid"] = Uuid.ToString(),
+        };
         if (Name != null)
         {
-            sb.Append($",\"name\":{name}");
+            content["name"] = Name;
         }
-        sb.Append("}}");
-        return sb.ToString();
+
+        return new JsonObject
+        {
+            ["action"] = "show_entity",
+            ["content"] = content
+        };
     }
 
     public override NbtTag ToNbt()

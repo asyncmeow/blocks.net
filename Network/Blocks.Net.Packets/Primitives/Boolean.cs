@@ -16,7 +16,7 @@ public struct Boolean(bool v)
     public static implicit operator Boolean(bool v) => new(v);
 
 
-    public void WriteTo(MemoryStream stream) => stream.WriteByte((byte)(v ? 1 : 0));
+    public void WriteTo(Stream stream) => stream.WriteByte((byte)(v ? 1 : 0));
 
     public static Boolean ReadFrom(MemoryStream stream) => stream.CheckedReadByte() == 1;
 }

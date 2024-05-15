@@ -19,7 +19,7 @@ public struct VarInt(int v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator VarInt(int v) => new(v);
     
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var value = (uint)v;
         while (true) {
@@ -34,12 +34,13 @@ public struct VarInt(int v)
     }
     
     
-    public static VarInt ReadFrom(MemoryStream stream)
+    public static VarInt ReadFrom(Stream stream)
     {
         var value = 0u;
         var position = 0;
         while (true)
         {
+            Console.WriteLine("VarInt reading byte");
             var currentByte = stream.CheckedReadByte();
             value |= (currentByte & SegmentBits) << position;
 

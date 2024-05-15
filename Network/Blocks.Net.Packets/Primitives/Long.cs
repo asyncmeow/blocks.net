@@ -26,7 +26,7 @@ public struct Long(long v)
         return BitConverter.ToInt64(bytes);
     }
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

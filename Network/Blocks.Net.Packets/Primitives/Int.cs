@@ -25,7 +25,7 @@ public struct Int(int v)
         return BitConverter.ToInt32(bytes);
     }
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

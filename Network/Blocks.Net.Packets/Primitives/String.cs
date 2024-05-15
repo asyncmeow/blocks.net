@@ -14,7 +14,7 @@ public struct String(string v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator String(string v) => new(v);
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         var length = (VarInt)v.Length;
         length.WriteTo(stream);

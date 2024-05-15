@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt;
+﻿using System.Text.Json.Nodes;
+using Blocks.Net.Nbt;
 
 namespace Blocks.Net.Text;
 
@@ -6,9 +7,13 @@ public class HoverText(TextComponent toBeShown) : HoverEvent
 {
     public TextComponent ToBeShown => toBeShown;
 
-    public override string ToJson()
+    public override JsonNode ToJson()
     {
-        return $"{{\"action\":\"show_text\",\"content\":{toBeShown.ToJson()}}}";
+        return new JsonObject
+        {
+            ["action"] = "show_text",
+            ["content"] = toBeShown.ToJson()
+        };
     }
 
     public override NbtTag ToNbt()

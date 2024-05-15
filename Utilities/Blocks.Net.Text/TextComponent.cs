@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Net.Mime;
 using System.Text;
+using System.Text.Json.Nodes;
 using Blocks.Net.Nbt;
 using JetBrains.Annotations;
 
@@ -43,25 +44,24 @@ public class TextComponent
                                          Font == null && Insertion == null && ClickEvent == null &&
                                          HoverEvent == null && Children.Count == 0;
     
-    public string ToJson()
+    public JsonNode ToJson()
     {
-        if (IsSimpleTextComponent) return System.Web.HttpUtility.JavaScriptStringEncode(Text ?? "", true);
-        var sb = new StringBuilder();
-        sb.Append('{');
+        if (IsSimpleTextComponent) return Text ?? "";
+        var json = new JsonObject();
         switch (Type)
         {
             case ComponentType.Text:
-                sb.Append($"\"text\":{System.Web.HttpUtility.JavaScriptStringEncode(Text ?? "", true)}");
+                json["text"] = Text ?? "";
                 break;
             case ComponentType.Translatable:
-                sb.Append($"\"translate\":{System.Web.HttpUtility.JavaScriptStringEncode(Text ?? "", true)}");
+                json["translate"] = Text ?? "";
                 if (With.Count > 0)
                 {
-                    sb.Append($",\"with\":[{string.Join(",", With.Select(x => x.ToJson()))}]");
+                    json["with"] = new JsonArray(With.Select(x => x.ToJson()).ToArray());
                 }
                 break;
             case ComponentType.KeyBind:
-                sb.Append($"\"keybind\":{System.Web.HttpUtility.JavaScriptStringEncode(Text ?? "", true)}");
+                json["keybind"] = Text ?? "";
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -69,51 +69,60 @@ public class TextComponent
 
         if (Color != null)
         {
-            sb.Append($",\"color\":{System.Web.HttpUtility.JavaScriptStringEncode(Color, true)}");
+            json["color"] = Color;
         }
 
         if (Bold != StylingState.Inherit)
         {
-            sb.Append($",\"bold\":{(Bold == StylingState.Set ? "true" : "false")}");
+            json["bold"] = Bold == StylingState.Set;
         }
+        
         if (Italic != StylingState.Inherit)
         {
-            sb.Append($",\"italic\":{(Italic == StylingState.Set ? "true" : "false")}");
-        }
+            json["italic"] = Italic == StylingState.Set;
+        } 
+        
         if (Underlined != StylingState.Inherit)
         {
-            sb.Append($",\"underlined\":{(Underlined == StylingState.Set ? "true" : "false")}");
+            json["underlined"] = Underlined == StylingState.Set;
         }
+
         if (Strikethrough != StylingState.Inherit)
         {
-            sb.Append($",\"strikethrough\":{(Strikethrough == StylingState.Set ? "true" : "false")}");
+            json["strikethrough"] = Strikethrough == StylingState.Set;
         }
+
         if (Obfuscated != StylingState.Inherit)
         {
-            sb.Append($",\"obfuscated\":{(Obfuscated == StylingState.Set ? "true" : "false")}");
+            json["obfuscated"] = Obfuscated == StylingState.Set;
+        }
+
+        if (Font != null)
+        {
+            json["font"] = Font;
         }
 
         if (Insertion != null)
         {
-            sb.Append($",\"insertion\":{System.Web.HttpUtility.JavaScriptStringEncode(Insertion, true)}");
+            json["insertion"] = Insertion;
         }
 
         if (ClickEvent != null)
         {
-            sb.Append($",\"clickEvent\":{ClickEvent.ToJson()}");
+            json["clickEvent"] = ClickEvent.ToJson();
         }
 
         if (HoverEvent != null)
         {
-            sb.Append($",\"hoverEvent\":{HoverEvent.ToJson()}");
+            json["hoverEvent"] = HoverEvent.ToJson();
         }
 
         if (Children.Count > 0)
         {
-            sb.Append($",\"extra\":[{string.Join(",", Children.Select(x => x.ToJson()))}]");
+            json["extra"] = new JsonArray(Children.Select(x => x.ToJson()).ToArray());
         }
-        sb.Append('}');
-        return sb.ToString();
+        
+        return json;
     }
 
     public NbtTag ToNbt(bool forceCompound=false)
@@ -188,6 +197,12 @@ public class TextComponent
         if (HoverEvent != null)
         {
             compound["hoverEvent"] = HoverEvent.ToNbt();
+        }
+
+        if (Children.Count > 0)
+        {
+            var force = Children.Any(x => !x.IsSimpleTextComponent);
+            compound["extra"] = new ListTag(null, NbtTagType.End, Children.Select(x => x.ToNbt(force)));
         }
         
         return compound;

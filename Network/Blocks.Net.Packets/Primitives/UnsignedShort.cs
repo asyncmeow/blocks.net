@@ -16,7 +16,7 @@ public struct UnsignedShort(ushort v)
     public static implicit operator UnsignedShort(ushort v) => new(v);
 
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         // Write in big endian format!
         stream.WriteByte((byte)(Value >> 8));
