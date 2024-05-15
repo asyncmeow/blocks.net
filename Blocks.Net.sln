@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Text", "Utilitie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.TestServer", "Blocks.Net.TestServer\Blocks.Net.TestServer.csproj", "{CAE52DF9-63CD-4D9E-B63D-96DB2768B900}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.InjectorSourceGenerator", "Utilities\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator.csproj", "{98627686-50CA-41C6-9D70-5AECEE9BF475}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,7 @@ Global
 		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
 		{F386E03C-47A7-4FD3-85F3-58A64609CB13} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
 		{56BC88C0-B1DE-48F1-B501-E95FF05E8120} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
+		{98627686-50CA-41C6-9D70-5AECEE9BF475} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -74,5 +77,9 @@ Global
 		{CAE52DF9-63CD-4D9E-B63D-96DB2768B900}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAE52DF9-63CD-4D9E-B63D-96DB2768B900}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAE52DF9-63CD-4D9E-B63D-96DB2768B900}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98627686-50CA-41C6-9D70-5AECEE9BF475}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98627686-50CA-41C6-9D70-5AECEE9BF475}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98627686-50CA-41C6-9D70-5AECEE9BF475}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98627686-50CA-41C6-9D70-5AECEE9BF475}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -6,8 +6,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Blocks.Net.PacketSourceGenerator;
 
 [Generator]
-public class PacketSourceGenerator : ISourceGenerator
+public partial class PacketSourceGenerator : ISourceGenerator
 {
+    
+    
     public void Initialize(GeneratorInitializationContext context)
     {
     }
@@ -30,33 +32,8 @@ public class PacketSourceGenerator : ISourceGenerator
     };    
     public void Execute(GeneratorExecutionContext context)
     {
-
-        // context.AddSource("IPacket.g.cs",@"
-        //     namespace Blocks.Net.Packets;
-        //     partial class 
-        // ");
-        // foreach (var syntaxTree in context.Compilation.SyntaxTrees)
-        // {
-        // }
-        
-        
-        // All of these are defined in the Attributes folder, just doing it here
-        context.AddSource("Packet.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n[AttributeUsage(AttributeTargets.Class)]\npublic class Packet(int id, bool clientBound = true, string state = \"Play\") : Attribute;");
-        context.AddSource("PacketArrayField.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n/// <summary>\n/// Used on arrays of primitive types, or structs, or fielded enums.\n/// </summary>\n/// <param name=\"arraySizeControl\">An expression resulting in a value convertible to an int for the size of the array to read</param>\n[AttributeUsage(AttributeTargets.Field)]\npublic class PacketArrayField(string arraySizeControl) : Attribute;");
-        context.AddSource("PacketField.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n/// <summary>\n/// Marks this field as a field for a packet\n/// The type of the field must be either in the Blocks.Net.Packets.Primitives namespace or have a static ReadFrom(MemoryStream) method\n/// And a static WriteTo(MemoryStream) method.\n///\n/// If the type of the field is an enum it is assumed to be a Primitives.VarInt for parsing purposes\n///\n/// Other conversions are as follows for parsing classes that are implicitly converted to the field and reverse\n/// bool   ->  Primitives.Boolean\n/// byte   ->  Primitives.UnsignedByte\n/// sbyte  ->  Primitives.Byte\n/// short  ->  Primitives.Short\n/// ushort ->  Primitives.UnsignedShort\n/// int    ->  Primitives.Int\n/// long   ->  Primitives.Long\n/// float  ->  Primitives.Float\n/// double ->  Primitives.Double\n/// string ->  Primitives.String\n///\n/// </summary>\n[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]\npublic class PacketField : Attribute;");
-        context.AddSource("PacketOptionalField.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n/// <summary>\n/// Sets this field as an optional field\n/// </summary>\n/// <param name=\"controllingCondition\">An expression that results in a bool that determines if this optional is included, can use previously parsed fields</param>\npublic class PacketOptionalField(string controllingCondition) : Attribute;");
-        context.AddSource("SubPacket.g.cs",
-            "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n/// <summary>\n/// Generate .ReadFrom and .WriteTo methods for this class like it were some form of sub packet\n/// (Mostly used for generating new primitive types based on structured data)\n/// </summary>\n[AttributeUsage(AttributeTargets.Struct)]\npublic class SubPacket : Attribute;");
-        context.AddSource("PacketEnum.g.cs","namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n/// <summary>\n/// Used on enum fields to determine the actual packet primitive type of the field\n/// </summary>\n/// <param name=\"EnumType\">The primitive type of the enum</param>\n[AttributeUsage(AttributeTargets.Field)]\npublic class PacketEnum(Type EnumType) : Attribute;");
-        
-        
         Dictionary<string, Dictionary<int, string>> serverBoundPackets = [];
         var foundPacketParser = false;
-
 
         foreach (var tree in context.Compilation.SyntaxTrees)
         {
@@ -66,6 +43,7 @@ public class PacketSourceGenerator : ISourceGenerator
             var header = string.Join("\n", usingDecls.Select(x => x.ToString()));
             var namespaceName = ns?.Name.ToString() ?? "";
             Console.WriteLine($"Found namespace: {namespaceName}");
+            // Console.WriteLine($"Found usings: {string.Join(",", usingDecls.Select(x => x.Name))}");
 
             var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>();
             var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
@@ -100,7 +78,6 @@ public class PacketSourceGenerator : ISourceGenerator
                     // Now let's go over every field
                     foreach (var field in clazz.DescendantNodes().OfType<FieldDeclarationSyntax>())
                     {
-                        
                         GeneratePacketFieldImpl(field, semanticModel, readFromSb, writeSb, fields);
                     }
                     
