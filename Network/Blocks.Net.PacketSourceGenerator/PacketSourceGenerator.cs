@@ -38,6 +38,9 @@ public class PacketSourceGenerator : ISourceGenerator
         // foreach (var syntaxTree in context.Compilation.SyntaxTrees)
         // {
         // }
+        
+        
+        // All of these are defined in the Attributes folder, just doing it here
         context.AddSource("Packet.g.cs",
             "namespace Blocks.Net.PacketSourceGenerator.Attributes;\n\n[AttributeUsage(AttributeTargets.Class)]\npublic class Packet(int id, bool clientBound = true, string state = \"Play\") : Attribute;");
         context.AddSource("PacketArrayField.g.cs",
