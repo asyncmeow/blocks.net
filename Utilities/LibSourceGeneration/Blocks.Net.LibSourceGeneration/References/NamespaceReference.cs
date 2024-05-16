@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Blocks.Net.LibSourceGeneration.Extensions;
 using Blocks.Net.LibSourceGeneration.Interfaces;
 
 namespace Blocks.Net.LibSourceGeneration.References;
@@ -30,9 +31,67 @@ public class NamespaceReference(string name) : ITopLevelProvider<NamespaceRefere
         return this;
     }
 
+    /// <inheritdoc/>
+    public NamespaceReference Using(params string[] namespaces)
+    {
+        Usings.AddRange(namespaces);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public NamespaceReference Using(IEnumerable<string> namespaces)
+    {
+        Usings.AddRange(namespaces);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public NamespaceReference UsingStatic(params string[] classes)
+    {
+        StaticUsings.AddRange(classes);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public NamespaceReference UsingStatic(IEnumerable<string> classes)
+    {
+        StaticUsings.AddRange(classes);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public NamespaceReference Alias(string newTypeName, string oldTypeName)
+    {
+        TypeUsings[newTypeName] = oldTypeName;
+        return this;
+    }
+
+    /// <inheritdoc/>
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        throw new NotImplementedException();
+        builder.AppendRepeating(indentation, indentationLevel).Append("namespace ").Append(name).Append(" {\n");
+        foreach (var import in Usings.Distinct())
+        {
+            builder.AppendRepeating(indentation, indentationLevel+1).Append($"using {import};\n");
+        }
+
+        foreach (var import in StaticUsings.Distinct())
+        {
+            builder.AppendRepeating(indentation, indentationLevel+1).Append($"using static {import};\n");
+        }
+
+        foreach (var kv in TypeUsings)
+        {
+            builder.AppendRepeating(indentation, indentationLevel+1).Append($"using {kv.Key} = {kv.Value};\n");
+        }
+
+        
+        foreach (var child in Children)
+        {
+            child.Build(builder, indentation, indentationLevel+1);
+        }
+
+        return builder.Append("}\n");
     }
 
     #region Type Provider
@@ -96,4 +155,10 @@ public class NamespaceReference(string name) : ITopLevelProvider<NamespaceRefere
         return this;
     }
     #endregion
+
+    public NamespaceReference Add(IBuildable buildable)
+    {
+        Children.Add(buildable);
+        return this;
+    }
 }

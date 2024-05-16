@@ -1,4 +1,10 @@
 ﻿using System.Text;
+using Blocks.Net.LibSourceGeneration.Builders;
+using Blocks.Net.LibSourceGeneration.Definitions;
+using Blocks.Net.LibSourceGeneration.Expressions;
+using Blocks.Net.LibSourceGeneration.Interfaces;
+using Blocks.Net.LibSourceGeneration.References;
+using Blocks.Net.LibSourceGeneration.Statements;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,30 +14,29 @@ namespace Blocks.Net.PacketSourceGenerator;
 [Generator]
 public partial class PacketSourceGenerator : ISourceGenerator
 {
-    
-    
     public void Initialize(GeneratorInitializationContext context)
     {
     }
 
-    
+
     // This is a simple remap of types from what we want, to what we need 
     private static readonly Dictionary<string, string> PrimitiveRemap = new()
     {
-        {"bool","Blocks.Net.Packets.Primitives.Boolean"},
-        {"byte","UnsignedByte"},
-        {"sbyte","Blocks.Net.Packets.Primitives.Byte"},
-        {"short","Short"},
-        {"ushort","UnsignedShort"},
-        {"int","Int"},
-        {"long","Long"},
-        {"float","Float"},
-        {"double","Blocks.Net.Packets.Primitives.Double"},
-        {"string","Blocks.Net.Packets.Primitives.String"},
-        {"NbtTag","Blocks.Net.Packets.Primitives.Nbt"},
-        {"Guid","Blocks.Net.Packets.Primitives.Uuid"},
-        {"Uuid","Blocks.Net.Packets.Primitives.Uuid"},
-    };    
+        { "bool", "Blocks.Net.Packets.Primitives.Boolean" },
+        { "byte", "UnsignedByte" },
+        { "sbyte", "Blocks.Net.Packets.Primitives.Byte" },
+        { "short", "Short" },
+        { "ushort", "UnsignedShort" },
+        { "int", "Int" },
+        { "long", "Long" },
+        { "float", "Float" },
+        { "double", "Blocks.Net.Packets.Primitives.Double" },
+        { "string", "Blocks.Net.Packets.Primitives.String" },
+        { "NbtTag", "Blocks.Net.Packets.Primitives.Nbt" },
+        { "Guid", "Blocks.Net.Packets.Primitives.Uuid" },
+        { "Uuid", "Blocks.Net.Packets.Primitives.Uuid" },
+    };
+
     public void Execute(GeneratorExecutionContext context)
     {
         Dictionary<string, Dictionary<int, string>> serverBoundPackets = [];
@@ -42,7 +47,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var semanticModel = context.Compilation.GetSemanticModel(tree);
             var ns = tree.GetRoot().DescendantNodes().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
             var usingDecls = tree.GetRoot().DescendantNodes().OfType<UsingDirectiveSyntax>();
-            var header = string.Join("\n", usingDecls.Select(x => x.ToString()));
+            var usings = usingDecls.Select(x => x.Name!.ToString()).ToArray();
+            // var header = string.Join("\n", usingDecls.Select(x => x.ToString()));
             var namespaceName = ns?.Name.ToString() ?? "";
             Console.WriteLine($"Found namespace: {namespaceName}");
             // Console.WriteLine($"Found usings: {string.Join(",", usingDecls.Select(x => x.Name))}");
@@ -65,7 +71,9 @@ public partial class PacketSourceGenerator : ISourceGenerator
                     var byteNode = descendentTokens.FirstOrDefault(x => x.IsKind(SyntaxKind.NumericLiteralToken));
                     if (byteNode == null) continue;
                     var packetId = (int)(byteNode.Value ?? 0xff);
-                    var sb = StartPacketClass(namespaceName, className, packetId,header);
+                    // var sb = StartPacketClass(namespaceName, className, packetId, header);
+                    var builder = StartPacketClass(namespaceName, className, packetId, usings, out var @class);
+
                     var clientBoundToken = descendentTokens.FirstOrDefault(x =>
                         x.IsKind(SyntaxKind.TrueKeyword) || x.IsKind(SyntaxKind.FalseKeyword));
                     var clientBound = clientBoundToken == null || clientBoundToken.IsKind(SyntaxKind.TrueKeyword);
@@ -73,19 +81,16 @@ public partial class PacketSourceGenerator : ISourceGenerator
                         descendentTokens.FirstOrDefault(x => x.IsKind(SyntaxKind.StringLiteralToken)) is var syntaxToken
                             ? (string)syntaxToken.Value!
                             : "Play";
-                    // Generate the needed methods
-                    var readFromSb = StartReadFrom(className);
-                    var writeSb = StartWrite();
+                    var read = StartReadFrom(@class, className);
+                    var write = StartWrite(@class);
                     List<string> fields = [];
-                    // Now let's go over every field
                     foreach (var field in clazz.DescendantNodes().OfType<FieldDeclarationSyntax>())
                     {
-                        GeneratePacketFieldImpl(field, semanticModel, readFromSb, writeSb, fields);
+                        GeneratePacketFieldImpl(field, semanticModel, read, write, fields);
                     }
-                    
-                    EndReadFrom(sb, readFromSb, fields.ToArray());
-                    EndWrite(sb, writeSb);
-                    
+
+                    EndReadFrom(read, fields.ToArray());
+
                     if (!clientBound)
                     {
                         var dict = serverBoundPackets.TryGetValue(state, out var d)
@@ -93,7 +98,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
                             : serverBoundPackets[state] = [];
                         dict[packetId] = $"{namespaceName}.{className}";
                     }
-                    context.AddSource($"{namespaceName}.{className}.g.cs", StopPacketClass(sb));
+
+                    context.AddSource($"{namespaceName}.{className}.g.cs", builder.Build());
                 }
             }
 
@@ -105,21 +111,20 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 if (attrs.FirstOrDefault(a =>
                         a.DescendantTokens().Any(dt => CheckForSubPacketAttribute(dt, semanticModel))) is { } attr)
                 {
-                    var sb = StartSubPacketStruct(namespaceName, structName,header);
+                    var builder = StartSubPacketStruct(namespaceName, structName, usings, out var @struct);
 
-                    var readFromSb = StartReadFrom(structName,true);
-                    var writeSb = StartWrite(true);
+                    var read = StartReadFrom(@struct, structName, true);
+                    var write = StartWrite(@struct, true);
                     List<string> fields = [];
                     // Now let's go over every field
                     foreach (var field in structure.DescendantNodes().OfType<FieldDeclarationSyntax>())
                     {
-                        GeneratePacketFieldImpl(field, semanticModel, readFromSb, writeSb, fields);
+                        GeneratePacketFieldImpl(field, semanticModel, read, write, fields);
                     }
-                    
-                    EndReadFrom(sb, readFromSb, fields.ToArray());
-                    EndWrite(sb, writeSb);
 
-                    context.AddSource($"{namespaceName}.{structName}.g.cs", StopPacketClass(sb));
+                    EndReadFrom(read, fields.ToArray());
+
+                    context.AddSource($"{namespaceName}.{structName}.g.cs", builder.Build());
                 }
             }
         }
@@ -129,30 +134,37 @@ public partial class PacketSourceGenerator : ISourceGenerator
         if (foundPacketParser)
         {
             // Now we need to generate our own packet parser class with all the delegates
-            var sb = new StringBuilder();
-            sb.Append("namespace Blocks.Net.Packets;\nstatic partial class PacketParser {\n");
-            foreach (var kvp in serverBoundPackets)
-            {
-                var state = kvp.Key;
-                var delegates = kvp.Value;
-                // Now lets create the dictionary
-                sb.Append(
-                    $"    public static Dictionary<int,Func<MemoryStream,IPacket>> {state}ServerBoundPackets = new()\n    {{\n");
-                foreach (var kvp2 in delegates)
+            // var sb = new StringBuilder();
+            var builder = new SourceFileBuilder().WithFileScopedNamespace("Blocks.Net.Packets").AddClass("PacketParser",
+                @class =>
                 {
-                    sb.Append($"        {{0x{kvp2.Key:X},{kvp2.Value}.ReadFrom}},\n");
-                }
-
-                sb.Append("    };\n");
-            }
-
-            sb.Append("}\n");
-            context.AddSource("PacketParser.g.cs", sb.ToString());
+                    @class.Static().Partial();
+                    foreach (var kvp in serverBoundPackets)
+                    {
+                        var state = kvp.Key;
+                        var delegates = kvp.Value;
+                        @class.AddField("Dictionary<int,Func<MemoryStream,IPacket>>", $"{state}ServerBoundPackets",
+                            field =>
+                            {
+                                field.Public().Static();
+                                field.Default(new NewObject().InitializeWith(init =>
+                                {
+                                    foreach (var kvp2 in delegates)
+                                    {
+                                        init.Add(new CollectionInitializer().Add(
+                                            new IntegerLiteral(kvp2.Key, @base: IntegerBase.Hexadecimal),
+                                            new GetStatic(kvp2.Value, "ReadFrom")));
+                                    }
+                                }));
+                            });
+                    }
+                });
+            context.AddSource("PacketParser.g.cs", builder.Build());
         }
     }
 
     private void GeneratePacketFieldImpl(FieldDeclarationSyntax field, SemanticModel semanticModel,
-        StringBuilder readFromMethodStringBuffer, StringBuilder writeMethodStringBuffer, List<string> fields)
+        MethodReference read, MethodReference write, List<string> fields)
     {
         Console.WriteLine($"Found field: {field}");
         // Now let's check first if the field has a very simple attribute
@@ -162,16 +174,17 @@ public partial class PacketSourceGenerator : ISourceGenerator
         var targetType = decl.Type.GetText().ToString().Trim();
         var name = decl.Variables.First().Identifier.Text;
         // The simplest type of packet field to handle
-        if (fieldAttrs.FirstOrDefault(a => a.DescendantTokens().Any(dt => CheckForPacketFieldAttribute(dt, semanticModel))) is {} fieldAttr)
+        if (fieldAttrs.FirstOrDefault(a =>
+                a.DescendantTokens().Any(dt => CheckForPacketFieldAttribute(dt, semanticModel))) is { } fieldAttr)
         {
             var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
                 ? primType
                 : targetType;
-            AddSimpleFieldRead(readFromMethodStringBuffer, name, targetType, primitiveType);
-            AddSimpleFieldWrite(writeMethodStringBuffer, name, targetType, primitiveType);
+            AddSimpleFieldRead(read, name, targetType, primitiveType);
+            AddSimpleFieldWrite(write, name, targetType, primitiveType);
             fields.Add(name);
         }
-                        
+
         // Almost as simple
         if (fieldAttrs.FirstOrDefault(a =>
                 a.DescendantTokens().Any(dt => CheckForPacketEnumAttribute(dt, semanticModel))) is
@@ -183,8 +196,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var primitiveType = PrimitiveRemap.TryGetValue(relatedType, out var primType)
                 ? primType
                 : relatedType;
-            AddEnumFieldRead(readFromMethodStringBuffer, name, targetType, primitiveType);
-            AddEnumFieldWrite(writeMethodStringBuffer, name, targetType, primitiveType);
+            AddEnumFieldRead(read, name, targetType, primitiveType);
+            AddEnumFieldWrite(write, name, primitiveType);
             fields.Add(name);
         }
 
@@ -200,8 +213,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var primitiveSubType = PrimitiveRemap.TryGetValue(targetTypeSubType, out var primSubType)
                 ? primSubType
                 : targetTypeSubType;
-            AddArrayFieldRead(readFromMethodStringBuffer, name, targetTypeSubType, primitiveSubType, stringValue);
-            AddArrayFieldWrite(writeMethodStringBuffer, name, targetTypeSubType, primitiveSubType, stringValue);
+            AddArrayFieldRead(read, name, targetTypeSubType, primitiveSubType, stringValue);
+            AddArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType, stringValue);
             fields.Add(name);
         }
 
@@ -209,15 +222,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 a.DescendantTokens().Any(dt => CheckForPacketOptionalFieldAttribute(dt, semanticModel))) is
             { } optAttr)
         {
-            
             var descendantTokens = optAttr.DescendantTokens().ToArray();
             var stringNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.StringLiteralToken));
             var stringValue = (string)stringNode.Value!;
             var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
                 ? primType
                 : targetType;
-            AddOptionalFieldRead(readFromMethodStringBuffer, name, targetType, primitiveType,stringValue);
-            AddOptionalFieldWrite(writeMethodStringBuffer, name, targetType, primitiveType,stringValue);
+            AddOptionalFieldRead(read, name, targetType, primitiveType, stringValue);
+            AddOptionalFieldWrite(write, name, targetType, primitiveType, stringValue);
             fields.Add(name);
         }
     }
@@ -230,7 +242,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         // Console.WriteLine($"Found attribute of type: {name}");
         return name == "Packet";
     }
-    
+
     private bool CheckForSubPacketAttribute(SyntaxToken token, SemanticModel semanticModel)
     {
         if (!token.IsKind(SyntaxKind.IdentifierToken)) return false;
@@ -239,7 +251,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         // Console.WriteLine($"Found attribute of type: {name}");
         return name == "SubPacket";
     }
-    
+
     private bool CheckForPacketFieldAttribute(SyntaxToken token, SemanticModel semanticModel)
     {
         if (!token.IsKind(SyntaxKind.IdentifierToken)) return false;
@@ -257,7 +269,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         // Console.WriteLine($"Found field attribute of type: {name}");
         return name == "PacketEnum";
     }
-    
+
     private bool CheckForPacketArrayFieldAttribute(SyntaxToken token, SemanticModel semanticModel)
     {
         if (!token.IsKind(SyntaxKind.IdentifierToken)) return false;
@@ -282,7 +294,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         StringBuilder sb = new();
         // Just make sure that we are using this here! As it's important for parsing purposes
         sb.Append("using Blocks.Net.Packets.Primitives;\n");
-        sb.Append(header.Replace("using Blocks.Net.Packets.Primitives;","")).Append('\n');
+        sb.Append(header.Replace("using Blocks.Net.Packets.Primitives;", "")).Append('\n');
         if (!string.IsNullOrEmpty(ns)) sb.Append($"namespace {namespaceName};\n");
 
         sb.Append($"partial class {className} {{\n");
@@ -291,30 +303,61 @@ public partial class PacketSourceGenerator : ISourceGenerator
         return sb;
     }
 
-    private StringBuilder StartSubPacketStruct(string ns, string structName,string header)
+    // Let's do this a simple way
+    private SourceFileBuilder StartPacketClass(string ns, string className, int id, IEnumerable<string> usings,
+        out StructuredTypeReference @class)
+    {
+        var sfb = new SourceFileBuilder().WithFileScopedNamespace(ns).Using(usings)
+            .Using("Blocks.Net.Packets.Primitives").AddClass(className, out @class);
+        @class.Partial().AddProperty("int", "PacketId",
+            prop => prop.Public().AddGetter(get => get.Return(new IntegerLiteral(id, @base: IntegerBase.Hexadecimal))));
+        return sfb;
+    }
+
+    private StringBuilder StartSubPacketStruct(string ns, string structName, string header)
     {
         var namespaceName = ns;
         StringBuilder sb = new();
         // Just make sure that we are using this here! As it's important for parsing purposes
         sb.Append("using Blocks.Net.Packets.Primitives;\n");
-        sb.Append(header.Replace("using Blocks.Net.Packets.Primitives;","")).Append('\n');
+        sb.Append(header.Replace("using Blocks.Net.Packets.Primitives;", "")).Append('\n');
         if (!string.IsNullOrEmpty(ns)) sb.Append($"namespace {namespaceName};\n");
-
         sb.Append($"partial struct {structName} {{\n");
         return sb;
+    }
+
+    private SourceFileBuilder StartSubPacketStruct(string ns, string structName, IEnumerable<string> usings,
+        out StructuredTypeReference @struct)
+    {
+        var sfb = new SourceFileBuilder().WithFileScopedNamespace(ns).Using(usings)
+            .Using("Blocks.Net.Packets.Primitives").AddStruct(structName, out @struct);
+        @struct.Partial();
+        return sfb;
     }
 
     private StringBuilder StartReadFrom(string className, bool isSubPacket = false)
     {
         var sb = new StringBuilder();
-        sb.Append( "    /// <summary>\n");
+        sb.Append("    /// <summary>\n");
         sb.Append($"    /// Reads a {className} {(isSubPacket ? "sub" : "")}packet from a memory stream\n");
-        sb.Append( "    /// </summary>\n");
+        sb.Append("    /// </summary>\n");
         sb.Append(
             $"    /// <param name=\"stream\">The {(isSubPacket ? "sub" : "")}packet stream{(isSubPacket ? "" : ", the length and id must already be consumed")}</param>\n");
-        sb.Append($"    /// <returns>A {(isSubPacket ? "sub" : "")}packet constructed from the given stream</returns>\n");
+        sb.Append(
+            $"    /// <returns>A {(isSubPacket ? "sub" : "")}packet constructed from the given stream</returns>\n");
         sb.Append($"    public static {className} ReadFrom(MemoryStream stream) {{\n");
         return sb;
+    }
+
+    private MethodReference StartReadFrom(StructuredTypeReference ty, string className, bool isSubPacket = false)
+    {
+        ty.AddMethod(className, "ReadFrom", out var method);
+        return method.Public().Static().WithParameters(new ParameterReference(typeof(MemoryStream), "stream"))
+            .WithDocumentation(new DocCommentBuilder()
+                .WithSummary($"Reads a {className} {(isSubPacket ? "sub" : "")}packet from a memory stream\n")
+                .WithParameter("stream",
+                    $"The {(isSubPacket ? "sub" : "")}packet stream{(isSubPacket ? "" : ", the length and id must already be consumed")}")
+                .Returns($"A {(isSubPacket ? "sub" : "")}packet constructed from the given stream"));
     }
 
     private void AddSimpleFieldRead(StringBuilder sb, string fieldName, string targetType, string primitiveType) =>
@@ -322,8 +365,25 @@ public partial class PacketSourceGenerator : ISourceGenerator
             ? $"        var {fieldName} = {targetType}.ReadFrom(stream);\n"
             : $"        var {fieldName} = ({targetType}){primitiveType}.ReadFrom(stream);\n");
 
+    private void AddSimpleFieldRead(MethodReference method, string fieldName, TypeReference targetType,
+        TypeReference primitiveType)
+    {
+        var call = new TypeCall(primitiveType, "ReadFrom", new Variable("stream"));
+        var init = primitiveType == targetType ? (IExpression)call : new CastExpression(targetType, call);
+        method.DeclareVariable(fieldName, init);
+    }
+
     private void AddEnumFieldRead(StringBuilder sb, string fieldName, string enumType, string primitiveType) =>
         sb.Append($"        var {fieldName} = ({enumType})({primitiveType}.ReadFrom(stream).Value);\n");
+
+    private void AddEnumFieldRead(MethodReference method, string fieldName, TypeReference enumType,
+        TypeReference primitiveType)
+    {
+        var call = new TypeCall(primitiveType, "ReadFrom", new Variable("stream"));
+        var value = new GetField(call, "Value");
+        var cast = new CastExpression(enumType, value);
+        method.DeclareVariable(fieldName, cast);
+    }
 
     private void AddArrayFieldRead(StringBuilder sb, string fieldName, string targetSubType, string primitiveSubType,
         string lengthControl)
@@ -338,7 +398,26 @@ public partial class PacketSourceGenerator : ISourceGenerator
         sb.Append($"        }}\n");
     }
 
-    private void AddOptionalFieldRead(StringBuilder sb, string fieldName, string targetType, string primitiveType, string optionalControl)
+    private void AddArrayFieldRead(MethodReference method, string fieldName, TypeReference targetSubType,
+        TypeReference primitiveSubType, string lengthControl)
+    {
+        var lengthVarName = $"__{fieldName}_length__";
+        var iterVarName = $"__{fieldName}_iter__";
+        method.DeclareVariable(typeof(int), lengthVarName, new InjectedExpression(lengthControl));
+        var lengthVar = new Variable(lengthVarName);
+        var iterVar = new Variable(iterVarName);
+        var field = new Variable(fieldName);
+        method.DeclareVariable(fieldName, new NewArray(targetSubType, lengthVar));
+        var call = new TypeCall(primitiveSubType, "ReadFrom", new Variable("stream"));
+        var init = primitiveSubType == targetSubType ? (IExpression)call : new CastExpression(targetSubType, call);
+        var assign = new Assignment(new Subscript(field, iterVar), init);
+        method.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
+            new LessThan(iterVar, lengthVar), new PostIncrement(iterVar),
+            loop => loop.Add(assign));
+    }
+
+    private void AddOptionalFieldRead(StringBuilder sb, string fieldName, string targetType, string primitiveType,
+        string optionalControl)
     {
         sb.Append($"        {targetType} {fieldName} = default({targetType});\n");
         sb.Append($"        if ({optionalControl}) {{\n");
@@ -347,7 +426,17 @@ public partial class PacketSourceGenerator : ISourceGenerator
             : $"            {fieldName} = ({targetType}){primitiveType}.ReadFrom(stream);\n");
         sb.Append($"        }}\n");
     }
-    
+
+    private void AddOptionalFieldRead(MethodReference method, string fieldName, TypeReference targetType,
+        TypeReference primitiveType, string optionalControl)
+    {
+        method.DeclareVariable(fieldName, new Default(targetType));
+        var call = new TypeCall(primitiveType, "ReadFrom", new Variable("stream"));
+        var init = primitiveType == targetType ? (IExpression)call : new CastExpression(targetType, call);
+        var assign = new Assignment(fieldName, init);
+        method.If(new InjectedExpression(optionalControl), statement => statement.Add(assign));
+    }
+
     private void EndReadFrom(StringBuilder classBuilder, StringBuilder sb, string[] fieldNames)
     {
         sb.Append("        return new() {\n");
@@ -355,12 +444,22 @@ public partial class PacketSourceGenerator : ISourceGenerator
         {
             sb.Append($"           {field} = {field},\n");
         }
+
         sb.Append("        };\n");
         sb.Append("    }\n");
         classBuilder.Append(sb);
     }
 
-    private StringBuilder StartWrite(bool isSubPacket=false)
+    private void EndReadFrom(MethodReference method, string[] fieldNames) =>
+        method.Return(new NewObject().InitializeWith(init =>
+        {
+            foreach (var field in fieldNames)
+            {
+                init.SetField(field, new Variable(field));
+            }
+        }));
+
+    private StringBuilder StartWrite(bool isSubPacket = false)
     {
         var sb = new StringBuilder();
         sb.Append("    /// <inheritdoc />\n");
@@ -372,7 +471,19 @@ public partial class PacketSourceGenerator : ISourceGenerator
         {
             sb.Append("    public void WriteTo(MemoryStream stream) {\n");
         }
+
         return sb;
+    }
+
+    private MethodReference StartWrite(StructuredTypeReference type, bool isSubPacket = false)
+    {
+        type.AddMethod("void", isSubPacket ? "WriteTo" : "Write", out var method);
+        if (!isSubPacket)
+        {
+            method.WithDocumentation(DocCommentBuilder.InheritDoc());
+        }
+
+        return method.Public().WithParameters(new ParameterReference(typeof(MemoryStream), "stream"));
     }
 
     private void AddSimpleFieldWrite(StringBuilder sb, string fieldName, string targetType, string primitiveType)
@@ -382,8 +493,24 @@ public partial class PacketSourceGenerator : ISourceGenerator
             : $"        (({primitiveType}){fieldName}).WriteTo(stream);\n");
     }
 
+    private void AddSimpleFieldWrite(MethodReference method, string fieldName, TypeReference targetType,
+        TypeReference primitiveType)
+    {
+        var field = new Variable(fieldName);
+        var stream = new Variable("stream");
+        method.Add(new Call(targetType == primitiveType ? field : new CastExpression(primitiveType, field), "WriteTo",
+            stream));
+    }
+
     private void AddEnumFieldWrite(StringBuilder sb, string fieldName, string enumType, string primitiveType) =>
         sb.Append($"        (({primitiveType})(int){fieldName}).WriteTo(stream);\n");
+
+    private void AddEnumFieldWrite(MethodReference method, string fieldName, TypeReference primitiveType)
+    {
+        var field = new Variable(fieldName);
+        var stream = new Variable("stream");
+        method.Add(new Call(new CastExpression(primitiveType, new CastExpression("int", field)), "WriteTo", stream));
+    }
 
     private void AddArrayFieldWrite(StringBuilder sb, string fieldName, string targetSubType, string primitiveSubType,
         string lengthControl)
@@ -392,8 +519,31 @@ public partial class PacketSourceGenerator : ISourceGenerator
         var iterVarName = $"__{fieldName}_iter__";
         sb.Append($"        int {lengthVarName} = {lengthControl};\n");
         sb.Append($"        for (var {iterVarName} = 0; {iterVarName} < {lengthVarName}; {iterVarName}++) {{\n");
-        sb.Append($"            {(targetSubType == primitiveSubType ? $"{fieldName}[{iterVarName}]" : $"(({primitiveSubType}){fieldName}[{iterVarName}])")}.WriteTo(stream);\n");
+        sb.Append(
+            $"            {(targetSubType == primitiveSubType ? $"{fieldName}[{iterVarName}]" : $"(({primitiveSubType}){fieldName}[{iterVarName}])")}.WriteTo(stream);\n");
         sb.Append("        }\n");
+    }
+
+    private void AddArrayFieldWrite(MethodReference method, string fieldName, TypeReference targetSubType,
+        TypeReference primitiveSubType, string lengthControl)
+    {
+        var lengthVarName = $"__{fieldName}_length__";
+        var iterVarName = $"__{fieldName}_iter__";
+        method.DeclareVariable(typeof(int), lengthVarName, new InjectedExpression(lengthControl));
+        var lengthVar = new Variable(lengthVarName);
+        var iterVar = new Variable(iterVarName);
+        var field = new Variable(fieldName);
+        var stream = new Variable("stream");
+        IExpression baseVar = new Subscript(field, iterVar);
+        if (targetSubType != primitiveSubType)
+        {
+            baseVar = new CastExpression(primitiveSubType, baseVar);
+        }
+
+        var call = new Call(baseVar, "WriteTo", stream);
+        method.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
+            new LessThan(iterVar, lengthVar), new PostIncrement(iterVar),
+            loop => loop.Add(call));
     }
 
     private void AddOptionalFieldWrite(StringBuilder sb, string fieldName, string targetType, string primitiveType,
@@ -405,7 +555,22 @@ public partial class PacketSourceGenerator : ISourceGenerator
             : $"            (({primitiveType}){fieldName}).WriteTo(stream);\n");
         sb.Append("        }\n");
     }
-    
+
+
+    private void AddOptionalFieldWrite(MethodReference method, string fieldName, TypeReference targetType,
+        TypeReference primitiveType, string optionalControl)
+    {
+        IExpression baseVar = new Variable(fieldName);
+        if (targetType != primitiveType)
+        {
+            baseVar = new CastExpression(primitiveType, baseVar);
+        }
+
+        var stream = new Variable("stream");
+        var call = new Call(baseVar, "WriteTo", stream);
+        method.If(new InjectedExpression(optionalControl), ifStatement => ifStatement.Add(call));
+    }
+
     private void EndWrite(StringBuilder classBuilder, StringBuilder sb)
     {
         sb.Append("    }\n");

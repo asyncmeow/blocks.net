@@ -24,7 +24,7 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
             : typeReference.Name;
         if (typeReference.Generic)
             baseType =
-                $"{baseType}<{string.Join(",", typeReference.GenericParameters.Select(x => x != null ? (string)x : ""))}>";
+                $"{baseType}<{string.Join(",", typeReference.GenericParameters.Select(x => x is not null ? (string)x : ""))}>";
         if (typeReference._nullable)
             baseType += "?";
         foreach (var rank in typeReference._arrayRanks)
@@ -165,5 +165,17 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
     }
 
     public override string ToString() => this;
+    public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel) => builder.Append(this);
+
     public string Generate() => this;
+    
+    public static bool operator ==(TypeReference a, TypeReference b)
+    {
+        return a.ToString() == b.ToString();
+    }
+
+    public static bool operator !=(TypeReference a, TypeReference b)
+    {
+        return !(a == b);
+    }
 }

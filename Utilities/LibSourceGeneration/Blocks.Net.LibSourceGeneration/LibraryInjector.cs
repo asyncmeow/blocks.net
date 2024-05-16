@@ -18,6 +18,11 @@ public partial class LibraryInjector : ISourceGenerator
     public static string[] Interfaces;
     [EmbedNamespace("Blocks.Net.LibSourceGeneration.References")]
     public static string[] References;
+    [EmbedNamespace("Blocks.Net.LibSourceGeneration.Statements")]
+    public static string[] Statements;
+
+    [EmbedNamespace("Blocks.Net.LibSourceGeneration.Constraints")]
+    public static string[] Constraints;
     
     public void Initialize(GeneratorInitializationContext context)
     {

@@ -12,8 +12,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="asyncmeow.Testura.Code" Version="1.6.0" />
-        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="asyncmeow.Testura.Code" Version="1.6.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,10 +22,11 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0"/>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Extensions\" />
+        <Folder Include="Extensions\"/>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Utilities\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\Utilities\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator\Blocks.Net.InjectorSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\Utilities\LibSourceGeneration\Blocks.Net.LibSourceGeneration\Blocks.Net.LibSourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
 

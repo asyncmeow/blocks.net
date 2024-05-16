@@ -3,11 +3,11 @@ using Blocks.Net.LibSourceGeneration.Interfaces;
 
 namespace Blocks.Net.LibSourceGeneration.Expressions;
 
-public class Argument(string name, IExpression value) : IExpression
+public class FieldInitializer(string field, IExpression initializer) : IExpression
 {
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        builder.Append(name);
-        return value.Build(builder, indentation, indentationLevel + 1);
+        builder.Append(field).Append(" = ");
+        return initializer.Build(builder, indentation, indentationLevel);
     }
 }

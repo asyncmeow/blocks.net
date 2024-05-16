@@ -19,7 +19,6 @@ public partial interface IPacket
     /// </summary>
     public int PacketId { get; }
     
-    // Once both of those are source genned uncomment the calls in this
     
     /// <summary>
     /// Writes the packet to a memory stream (with it's ID and length)

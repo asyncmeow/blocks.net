@@ -1,6 +1,6 @@
 ﻿using Blocks.Net.LibSourceGeneration.References;
 
-namespace Blocks.Net.LibSourceGeneration.Expressions;
+namespace Blocks.Net.LibSourceGeneration.Constraints;
 
 public class TypeConstraint(TypeReference t) : BaseGenericConstraint
 {

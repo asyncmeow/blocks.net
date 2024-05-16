@@ -8,9 +8,8 @@ namespace Blocks.Net.LibSourceGeneration.Builders;
 
 /// <summary>
 /// A tool used for generating source files in a structured manner, compared to using a string builder
-/// 
 /// </summary>
-public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildable, ITypeProvider<SourceFileBuilder>
+public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildable, ITypeProvider<SourceFileBuilder>, IAddable<SourceFileBuilder>
 {
     private readonly List<string> _usings = [];
     private readonly List<string> _staticUsings = [];
@@ -25,12 +24,14 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     /// <summary>
     /// Make a fully realized source file with all types and such resolved to exist in the source file
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A built source file</returns>
     public string Build()
     {
         return Build(new StringBuilder(), "    ",0).ToString();
     }
     
+    
+    /// <inheritdoc />
     public SourceFileBuilder WithNamespace(string name, out NamespaceReference ns)
     {
         if (!string.IsNullOrEmpty(_fileScopedNamespace))
@@ -40,6 +41,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder WithNamespace(string name, Action<NamespaceReference> construct)
     {
         if (!string.IsNullOrEmpty(_fileScopedNamespace))
@@ -50,6 +52,47 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc/>
+    public SourceFileBuilder Using(params string[] namespaces)
+    {
+        _usings.AddRange(namespaces);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public SourceFileBuilder Using(IEnumerable<string> namespaces)
+    {
+        _usings.AddRange(namespaces);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public SourceFileBuilder UsingStatic(params string[] classes)
+    {
+        _staticUsings.AddRange(classes);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public SourceFileBuilder UsingStatic(IEnumerable<string> classes)
+    {
+        _staticUsings.AddRange(classes);
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public SourceFileBuilder Alias(string newTypeName, string oldTypeName)
+    {
+        _typeUsings[newTypeName] = oldTypeName;
+        return this;
+    }
+
+    /// <summary>
+    /// Add a file scoped namespace to this source file
+    /// </summary>
+    /// <param name="name">The name of the file scoped namespace</param>
+    /// <returns>The instance for method chaining</returns>
+    /// <exception cref="Exception">If this file already has a non file scoped namespace</exception>
     public SourceFileBuilder WithFileScopedNamespace(string name)
     {
         if (Children.OfType<NamespaceReference>().Any())
@@ -59,14 +102,15 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     }
     
 
+    /// <inheritdoc />
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        foreach (var import in _usings)
+        foreach (var import in _usings.Distinct())
         {
             builder.AppendRepeating(indentation, indentationLevel).Append($"using {import};\n");
         }
 
-        foreach (var import in _staticUsings)
+        foreach (var import in _staticUsings.Distinct())
         {
             builder.AppendRepeating(indentation, indentationLevel).Append($"using static {import};\n");
         }
@@ -89,6 +133,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     }
 
     #region Type Provider
+    /// <inheritdoc />
     public SourceFileBuilder AddClass(string name, out StructuredTypeReference @class)
     {
         @class = new StructuredTypeReference(name).AsClass();
@@ -96,6 +141,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddClass(string name, Action<StructuredTypeReference> construct)
     {
         var @class = new StructuredTypeReference(name).AsClass();
@@ -104,6 +150,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddStruct(string name, out StructuredTypeReference @struct)
     {
         @struct = new StructuredTypeReference(name).AsStruct();
@@ -111,6 +158,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddStruct(string name, Action<StructuredTypeReference> construct)
     {
         var @struct = new StructuredTypeReference(name).AsStruct();
@@ -119,6 +167,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddRecord(string name, out StructuredTypeReference record)
     {
         record = new StructuredTypeReference(name).Record();
@@ -126,6 +175,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddRecord(string name, Action<StructuredTypeReference> construct)
     {
         var record = new StructuredTypeReference(name).Record();
@@ -134,6 +184,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    /// <inheritdoc />
     public SourceFileBuilder AddInterface(string name, out StructuredTypeReference @interface)
     {
         @interface = new StructuredTypeReference(name).AsStruct();
@@ -149,5 +200,10 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
     #endregion
-    
+
+    public SourceFileBuilder Add(IBuildable buildable)
+    {
+        Children.Add(buildable);
+        return this;
+    }
 }

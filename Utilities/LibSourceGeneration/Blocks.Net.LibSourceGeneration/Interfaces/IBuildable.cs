@@ -2,6 +2,9 @@
 
 namespace Blocks.Net.LibSourceGeneration.Interfaces;
 
+/// <summary>
+/// Represents a source node that can be "built"
+/// </summary>
 public interface IBuildable
 {
     

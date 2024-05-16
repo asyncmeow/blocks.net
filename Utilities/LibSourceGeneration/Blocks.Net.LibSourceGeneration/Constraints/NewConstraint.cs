@@ -1,4 +1,4 @@
-﻿namespace Blocks.Net.LibSourceGeneration.Expressions;
+﻿namespace Blocks.Net.LibSourceGeneration.Constraints;
 
 public class NewConstraint : BaseGenericConstraint
 {
