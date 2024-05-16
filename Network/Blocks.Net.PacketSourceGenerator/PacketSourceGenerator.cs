@@ -14,6 +14,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
     {
     }
 
+    
+    // This is a simple remap of types from what we want, to what we need 
     private static readonly Dictionary<string, string> PrimitiveRemap = new()
     {
         {"bool","Blocks.Net.Packets.Primitives.Boolean"},
