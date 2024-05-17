@@ -10,14 +10,20 @@ public class ParameterReference(TypeReference type, string name) : IAttributable
 {
     public TypeReference Type => type;
     public string Name => name;
-    public IExpression? Default;
+    public IExpression? Default => _default;
+    
+    // Why we would use this form rather than a completely different form
+    public IEnumerable<Attribute> Attributes => _attributes;
+    
+    
+    private IExpression? _default;
     private List<Attribute> _attributes = [];
     private bool _isVarArgs = false;
     private bool _isExtension = false;
 
     public ParameterReference WithDefault(IExpression def)
     {
-        Default = def;
+        _default = def;
         return this;
     }
 
@@ -65,10 +71,10 @@ public class ParameterReference(TypeReference type, string name) : IAttributable
         }
 
         builder.Append(type).Append(' ').Append(name);
-        if (Default != null)
+        if (_default != null)
         {
             builder.Append(" = ");
-            Default.Build(builder, indentation, indentationLevel + 1);
+            _default.Build(builder, indentation, indentationLevel + 1);
         }
 
         return builder;

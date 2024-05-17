@@ -20,9 +20,10 @@ public partial class LibraryInjector : ISourceGenerator
     public static string[] References;
     [EmbedNamespace("Blocks.Net.LibSourceGeneration.Statements")]
     public static string[] Statements;
-
     [EmbedNamespace("Blocks.Net.LibSourceGeneration.Constraints")]
     public static string[] Constraints;
+    [EmbedNamespace("Blocks.Net.LibSourceGeneration.Query")]
+    public static string[] Query;
     
     public void Initialize(GeneratorInitializationContext context)
     {

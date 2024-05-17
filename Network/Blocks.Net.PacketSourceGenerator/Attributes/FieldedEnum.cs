@@ -6,4 +6,7 @@
 /// </summary>
 /// <param name="primitiveType"></param>
 [AttributeUsage(AttributeTargets.Enum)]
-public class FieldedEnum(Type primitiveType) : Attribute;
+public class FieldedEnum(Type primitiveType) : Attribute
+{
+    public Type PrimitiveType => primitiveType;
+}

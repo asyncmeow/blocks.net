@@ -11,7 +11,9 @@ namespace Blocks.Net.LibSourceGeneration.Expressions;
 /// <param name="reference">The type of constructor to call, null if it's another constructor in the type</param>
 public class BaseCall(TypeReference? reference = null) : IExpression
 {
-    private List<IExpression> _parameters;
+    private List<IExpression> _parameters = [];
+    public TypeReference? Type => reference;
+    public IEnumerable<IExpression> Parameters => _parameters;
 
     public BaseCall WithConstructorParameters(params IExpression[] newParameters)
     {

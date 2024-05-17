@@ -6,4 +6,7 @@
 /// </summary>
 /// <param name="enumeration"></param>
 [AttributeUsage(AttributeTargets.Class)]
-public class EnumField(Type enumeration) : Attribute;
+public class EnumField(Type enumeration) : Attribute
+{
+    public Type Enumeration => enumeration;
+}

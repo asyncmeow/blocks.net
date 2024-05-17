@@ -2,8 +2,11 @@
 using System.Text.RegularExpressions;
 using Blocks.Net.LibSourceGeneration.Extensions;
 using Blocks.Net.LibSourceGeneration.Interfaces;
+using Blocks.Net.LibSourceGeneration.Query;
 
 namespace Blocks.Net.LibSourceGeneration.References;
+
+// TODO: Switch this up with a *much* better type parsing system
 
 public class TypeReference(string? ns, string name, bool isGeneric = false, params TypeReference?[] genericArgs)
     : IExpression
@@ -15,8 +18,13 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
     public TypeReference?[] GenericParameters => genericArgs;
 
     private List<int> _arrayRanks = [];
+
+    public IEnumerable<int> Ranks => [];
+    
     private bool _nullable = false;
 
+    public bool Nullable => _nullable;
+    
     public static implicit operator string(TypeReference typeReference)
     {
         var baseType = !string.IsNullOrEmpty(typeReference.Namespace)
@@ -39,6 +47,7 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
 
     public static implicit operator TypeReference(Type t)
     {
+        if (t is DummyType dummyType) return dummyType.Reference;
         List<int> ranks = [];
         while (t.IsArray)
         {
@@ -77,6 +86,9 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
         return parsed;
     }
 
+    public static explicit operator Type(TypeReference t) => new DummyType(t);
+    
+
     public TypeReference WithGenericArgs(params TypeReference?[] args) => new(ns, name, true, args)
     {
         _arrayRanks = _arrayRanks,
@@ -95,6 +107,14 @@ public class TypeReference(string? ns, string name, bool isGeneric = false, para
         _arrayRanks = _arrayRanks.Append(rank).ToList(),
         _nullable = _nullable
     };
+
+    public TypeReference GetElementType() => new(ns, name, isGeneric, genericArgs)
+    {
+        _arrayRanks = _arrayRanks.Take(_arrayRanks.Count - 1).ToList(),
+        _nullable = _nullable
+    };
+
+    public bool IsArray => _arrayRanks.Count > 0;
     
     private static TypeReference? ParseType(string type, ref int position)
     {

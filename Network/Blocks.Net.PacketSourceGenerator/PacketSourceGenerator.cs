@@ -4,8 +4,10 @@ using Blocks.Net.LibSourceGeneration.Builders;
 using Blocks.Net.LibSourceGeneration.Definitions;
 using Blocks.Net.LibSourceGeneration.Expressions;
 using Blocks.Net.LibSourceGeneration.Interfaces;
+using Blocks.Net.LibSourceGeneration.Query;
 using Blocks.Net.LibSourceGeneration.References;
 using Blocks.Net.LibSourceGeneration.Statements;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -36,6 +38,18 @@ public partial class PacketSourceGenerator : ISourceGenerator
         { "NbtTag", "Blocks.Net.Packets.Primitives.Nbt" },
         { "Guid", "Blocks.Net.Packets.Primitives.Uuid" },
         { "Uuid", "Blocks.Net.Packets.Primitives.Uuid" },
+        { "System.Boolean", "Blocks.Net.Packets.Primitives.Boolean" },
+        { "System.Byte", "UnsignedByte" },
+        { "System.SByte", "SignedByte" },
+        { "System.Int16", "Short" },
+        { "System.UInt16", "UnsignedShort" },
+        { "System.Int32", "Int" },
+        { "System.UInt32", "UnsignedInt" },
+        { "System.Int64", "Long" },
+        { "System.UInt64", "UnsignedLong" },
+        { "System.Single", "Float" },
+        { "System.Double", "Blocks.Net.Packets.Primitives.Double" },
+        { "System.String", "Blocks.Net.Packets.Primitives.String" }
     };
 
     private class FieldedEnumInformation
@@ -49,11 +63,38 @@ public partial class PacketSourceGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
+        SyntaxAssembly assembly = new(context);
         Dictionary<string, Dictionary<int, string>> serverBoundPackets = [];
         Dictionary<string, FieldedEnumInformation> fieldedEnums = [];
         var foundPacketParser = false;
 
         // Now we need to have a list of structured type references for our source file builders
+
+        // Let's register enums another way!
+
+        foreach (var type in assembly.Types)
+        {
+            if (type.GetAttributes<Packet>().FirstOrDefault() is { } packet)
+            {
+                GeneratePacketImplementation(context, type, packet, serverBoundPackets);
+            }
+
+            if (type.HasAttribute<SubPacket>())
+            {
+                GenerateSubPacketImplementation(context, type);
+            }
+
+            if (type.GetAttributes<EnumField>().FirstOrDefault() is { } enumField)
+            {
+                GenerateEnumFieldImplementation(context, type, enumField, fieldedEnums);
+            }
+
+            if (type.GetAttributes<FieldedEnum>().FirstOrDefault() is { } fieldedEnum)
+            {
+                RegisterFieldedEnum(type, fieldedEnums, fieldedEnum);
+            }
+        }
+
 
         // Dictionary<string,List<(string,string)>> 
 
@@ -79,41 +120,16 @@ public partial class PacketSourceGenerator : ISourceGenerator
                         a => a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "Packet"))) is
                     { } attr)
                 {
-                    GeneratePacketImplementation(context, attr, namespaceName, className, usings, clazz, semanticModel,
-                        serverBoundPackets);
+                    // GeneratePacketImplementation(context, attr, namespaceName, className, usings, clazz, semanticModel,
+                    //     serverBoundPackets);
                 }
 
                 if (attrs.FirstOrDefault(a =>
                         a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "EnumField"))) is
                     { } enumFieldAttr)
                 {
-                    GenerateEnumFieldImplementation(context, enumFieldAttr, semanticModel, className, fieldedEnums,
-                        namespaceName, usings, clazz);
-                }
-            }
-
-            foreach (var structure in structs)
-            {
-                var structName = structure.Identifier.Text;
-                var attrs = structure.DescendantNodes().OfType<AttributeSyntax>().ToArray();
-                if (attrs.FirstOrDefault(a =>
-                        a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "SubPacket"))) is { } attr)
-                {
-                    GenerateSubPacketImplementation(context, namespaceName, structName, usings, structure,
-                        semanticModel);
-                }
-            }
-
-            foreach (var enumeration in enums)
-            {
-                var enumName = enumeration.Identifier.Text;
-
-                var attrs = enumeration.DescendantNodes().OfType<AttributeSyntax>().ToArray();
-                if (attrs.FirstOrDefault(
-                        a => a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "FieldedEnum"))) is
-                    { } attr)
-                {
-                    RegisterFieldedEnum(attr, semanticModel, fieldedEnums, enumName, namespaceName, usings);
+                    // GenerateEnumFieldImplementation(context, enumFieldAttr, semanticModel, className, fieldedEnums,
+                    //     namespaceName, usings, clazz);
                 }
             }
         }
@@ -134,6 +150,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         var sfb = new SourceFileBuilder()
             .WithFileScopedNamespace(fieldedEnum.Namespace)
             .Using(fieldedEnum.Usings)
+            .Using("Blocks.Net.Packets.Primitives")
             .Nullable()
             .AddInterface($"I{fieldedEnum.Name}",
                 enumInterface => enumInterface.Public().AddMethod("void", "Write",
@@ -175,6 +192,10 @@ public partial class PacketSourceGenerator : ISourceGenerator
                                 new Variable("stream")))
                             .Add(new Call(new NullPropagate(new Variable("Data")), "Write",
                                 new Variable("stream"))))
+                    .AddConversionOperator($"{fieldedEnum.Name}Impl", convert => convert.Public().Implicit()
+                        .WithParameters(new ParameterReference(fieldedEnum.Name, "type")).Return(
+                            new NewObject().InitializeWith(
+                                init => init.SetField("Type", new Variable("type")))))
             );
         context.AddSource($"{fieldedEnum.Namespace}.{fieldedEnum.Name}.g.cs", sfb.Build());
     }
@@ -209,87 +230,97 @@ public partial class PacketSourceGenerator : ISourceGenerator
         context.AddSource("PacketParser.g.cs", builder.Build());
     }
 
-    private static void RegisterFieldedEnum(AttributeSyntax attr, SemanticModel semanticModel,
-        Dictionary<string, FieldedEnumInformation> fieldedEnums,
-        string enumName, string namespaceName, string[] usings)
+    private static void RegisterFieldedEnum(SyntaxType type, Dictionary<string, FieldedEnumInformation> fieldedEnums,
+        FieldedEnum attr)
     {
-        var descendantTokens = attr.DescendantTokens().ToList();
-        var identNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.IdentifierToken));
-        var primitiveType = semanticModel.GetTypeInfo(identNode.Parent!).Type!.Name;
-        if (!fieldedEnums.TryGetValue(enumName, out var fieldedEnum))
-            fieldedEnum = fieldedEnums[enumName] = new()
-            {
-                Namespace = namespaceName,
-                Name = enumName,
-                Usings = usings.ToList(),
-                OverloadedFields = []
-            };
+        if (!fieldedEnums.TryGetValue(type.Name, out var fieldedEnum))
+            fieldedEnum = fieldedEnums[type.Name] = new();
+        fieldedEnum.Namespace = type.Module.Namespace;
+        fieldedEnum.Name = type.Name;
+        fieldedEnum.Usings.AddRange(type.Module.Usings);
+        var primType = attr.PrimitiveType.FullName!;
+        primType = PrimitiveRemap.TryGetValue(primType, out var p2) ? p2 : primType;
+        fieldedEnum.SubType = primType!;
     }
 
-    private void GenerateEnumFieldImplementation(GeneratorExecutionContext context, AttributeSyntax enumFieldAttr,
-        SemanticModel semanticModel, string className, Dictionary<string, FieldedEnumInformation> fieldedEnums,
-        string namespaceName, string[] usings,
-        ClassDeclarationSyntax clazz)
+    private void GenerateEnumFieldImplementation(GeneratorExecutionContext context, SyntaxType type, EnumField attr,
+        Dictionary<string, FieldedEnumInformation> fieldedEnums)
     {
-        var descendantTokens = enumFieldAttr.DescendantTokens().ToList();
-        var identNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.IdentifierToken));
-        var relatedType = semanticModel.GetTypeInfo(identNode.Parent!).Type!.Name;
-
+        var className = type.Name;
+        var relatedType = attr.Enumeration.Name;
+        var sfb = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");;
+        var impl = type.GenerateImplementation(sfb).Inherit($"I{relatedType}");
         var fieldName = className.StartsWith(relatedType)
             ? className.Substring(relatedType.Length)
             : className;
         if (!fieldedEnums.TryGetValue(relatedType, out var enumeration))
             enumeration = fieldedEnums[relatedType] = new FieldedEnumInformation
             {
-                Namespace = namespaceName,
+                Namespace = type.Module.Namespace,
                 Name = relatedType,
             };
-        enumeration.Usings.Add(namespaceName);
-        enumeration.Usings.AddRange(usings);
-        enumeration.OverloadedFields[fieldName] = $"{namespaceName}.{className}";
+        enumeration.Usings.Add(type.Module.Namespace);
+        enumeration.Usings.AddRange(type.Module.Usings);
 
-        var sfb = StartEnumFieldClass(namespaceName, className, relatedType,
-            usings.Append(enumeration.Namespace), out var @class);
-
-        var read = StartReadFrom(@class, className);
-        var write = StartWrite(@class);
+        var read = StartReadFrom(impl, className);
+        var write = StartWrite(impl);
         List<string> fields = [];
-        // Now let's go over every field
-        foreach (var field in clazz.DescendantNodes().OfType<FieldDeclarationSyntax>())
+
+        foreach (var field in type.Fields)
         {
-            GeneratePacketFieldImpl(field, semanticModel, read, write, fields);
+            GeneratePacketFieldImpl(field, read, write, fields);
         }
 
         EndReadFrom(read, fields.ToArray());
-        // Now we add a conversion operator
-        @class.AddConversionOperator($"{relatedType}Impl",
+        impl.AddConversionOperator($"{relatedType}Impl",
             method => method.Public().Implicit().WithParameters(new ParameterReference(className, "value"))
                 .Return(new NewObject().InitializeWith(init =>
                     init.SetField("Type", new GetStatic(relatedType, fieldName))
                         .SetField("Data", new Variable("value")))));
 
-        context.AddSource($"{namespaceName}.{className}.g.cs", sfb.Build());
+        context.AddSource($"{type.FullName}.g.cs", sfb.Build());
     }
 
-    private void GenerateSubPacketImplementation(GeneratorExecutionContext context, string namespaceName,
-        string structName,
-        string[] usings, StructDeclarationSyntax structure, SemanticModel semanticModel)
+    private void GenerateSubPacketImplementation(GeneratorExecutionContext context, SyntaxType subPacketType)
     {
-        var builder = StartSubPacketStruct(namespaceName, structName, usings, out var @struct);
-
-        var read = StartReadFrom(@struct, structName, true);
-        var write = StartWrite(@struct, true);
+        var sfb = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");;
+        var impl = subPacketType.GenerateImplementation(sfb);
+        var read = StartReadFrom(impl, subPacketType.Name, true);
+        var write = StartWrite(impl, true);
         List<string> fields = [];
-        // Now let's go over every field
-        foreach (var field in structure.DescendantNodes().OfType<FieldDeclarationSyntax>())
+        foreach (var field in subPacketType.Fields)
         {
-            GeneratePacketFieldImpl(field, semanticModel, read, write, fields);
+            GeneratePacketFieldImpl(field, read, write, fields);
         }
-
         EndReadFrom(read, fields.ToArray());
-
-        context.AddSource($"{namespaceName}.{structName}.g.cs", builder.Build());
+        context.AddSource($"{subPacketType.FullName}.g.cs", sfb.Build());
     }
+
+    private void GeneratePacketImplementation(GeneratorExecutionContext context, SyntaxType packetType, Packet attr, Dictionary<string, Dictionary<int, string>> serverBoundPackets)
+    {
+        var builder = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");
+        var impl = packetType.GenerateImplementation(builder).AddProperty("int", "PacketId",
+            id => id.Public()
+                .AddGetter(get => get.Return(new IntegerLiteral(attr.Id, @base: IntegerBase.Hexadecimal))));
+        
+        var read = StartReadFrom(impl, packetType.Name);
+        var write = StartWrite(impl);
+        List<string> fields = [];
+        foreach (var field in packetType.Fields)
+        {
+            GeneratePacketFieldImpl(field, read, write, fields);
+        }
+        EndReadFrom(read, fields.ToArray());
+        if (!attr.ClientBound)
+        {
+            var dict = serverBoundPackets.TryGetValue(attr.State, out var d)
+                ? d
+                : serverBoundPackets[attr.State] = [];
+            dict[attr.Id] = packetType.FullName;
+        }
+        context.AddSource($"{packetType.FullName}.g.cs", builder.Build());
+    }
+
 
     private void GeneratePacketImplementation(GeneratorExecutionContext context, AttributeSyntax attr,
         string namespaceName,
@@ -328,6 +359,51 @@ public partial class PacketSourceGenerator : ISourceGenerator
         }
 
         context.AddSource($"{namespaceName}.{className}.g.cs", builder.Build());
+    }
+
+    private void GeneratePacketFieldImpl(SyntaxField field, MethodReference read, MethodReference write,
+        List<string> fields)
+    {
+        var targetType = field.Type;
+        var name = field.Name;
+        if (field.HasAttribute<PacketField>())
+        {
+            var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
+                ? primType
+                : targetType;
+            AddSimpleFieldRead(read, name, targetType, primitiveType);
+            AddSimpleFieldWrite(write, name, targetType, primitiveType);
+            fields.Add(name);
+        }
+        else if (field.GetAttributes<PacketEnum>().FirstOrDefault() is { } enumAttr)
+        {
+            var relatedType = enumAttr.EnumType.FullName;
+            var primitiveType = PrimitiveRemap.TryGetValue(relatedType, out var primType)
+                ? primType
+                : relatedType;
+            AddEnumFieldRead(read, name, targetType, primitiveType);
+            AddEnumFieldWrite(write, name, primitiveType);
+            fields.Add(name);
+        }
+        else if (field.GetAttributes<PacketArrayField>().FirstOrDefault() is { } packetArrayField)
+        {
+            var targetTypeSubType = targetType.Substring(0, targetType.Length - 2);
+            var primitiveSubType = PrimitiveRemap.TryGetValue(targetTypeSubType, out var primSubType)
+                ? primSubType
+                : targetTypeSubType;
+            AddArrayFieldRead(read, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl);
+            AddArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl);
+            fields.Add(name);
+        }
+        else if (field.GetAttributes<PacketOptionalField>().FirstOrDefault() is { } packetOptionalField)
+        {
+            var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
+                ? primType
+                : targetType;
+            AddOptionalFieldRead(read, name, targetType, primitiveType, packetOptionalField.ControllingCondition);
+            AddOptionalFieldWrite(write, name, targetType, primitiveType, packetOptionalField.ControllingCondition);
+            fields.Add(name);
+        }
     }
 
     private void GeneratePacketFieldImpl(FieldDeclarationSyntax field, SemanticModel semanticModel,

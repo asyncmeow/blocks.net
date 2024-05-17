@@ -7,6 +7,10 @@ namespace Blocks.Net.LibSourceGeneration.Expressions;
 
 public class BaseType(TypeReference reference, bool hasParams = false, params IExpression[] parameters) : IExpression
 {
+    public TypeReference Type => reference;
+    public bool HasPrimaryCall => hasParams;
+    public IEnumerable<IExpression> PrimaryParameters => parameters;
+    
     public static implicit operator BaseType(TypeReference reference) => new(reference);
     public static implicit operator BaseType(string t) => new(t);
 
