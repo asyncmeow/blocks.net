@@ -68,12 +68,9 @@ public partial class PacketSourceGenerator : ISourceGenerator
         Dictionary<string, FieldedEnumInformation> fieldedEnums = [];
         var foundPacketParser = false;
 
-        // Now we need to have a list of structured type references for our source file builders
-
-        // Let's register enums another way!
-
         foreach (var type in assembly.Types)
         {
+            if (type.FullName == "Blocks.Net.Packets.PacketParser") foundPacketParser = true;
             if (type.GetAttributes<Packet>().FirstOrDefault() is { } packet)
             {
                 GeneratePacketImplementation(context, type, packet, serverBoundPackets);
@@ -92,45 +89,6 @@ public partial class PacketSourceGenerator : ISourceGenerator
             if (type.GetAttributes<FieldedEnum>().FirstOrDefault() is { } fieldedEnum)
             {
                 RegisterFieldedEnum(type, fieldedEnums, fieldedEnum);
-            }
-        }
-
-
-        // Dictionary<string,List<(string,string)>> 
-
-        foreach (var tree in context.Compilation.SyntaxTrees)
-        {
-            var semanticModel = context.Compilation.GetSemanticModel(tree);
-            var ns = tree.GetRoot().DescendantNodes().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
-            var usingDecls = tree.GetRoot().DescendantNodes().OfType<UsingDirectiveSyntax>();
-            var usings = usingDecls.Select(x => x.Name!.ToString()).ToArray();
-            var namespaceName = ns?.Name.ToString() ?? "";
-
-            var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>();
-            var enums = tree.GetRoot().DescendantNodes().OfType<EnumDeclarationSyntax>();
-            var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
-            var structs = tree.GetRoot().DescendantNodes().OfType<StructDeclarationSyntax>();
-
-            foreach (var clazz in classes)
-            {
-                var className = clazz.Identifier.Text;
-                var attrs = clazz.DescendantNodes().OfType<AttributeSyntax>().ToArray();
-                if ($"{namespaceName}.{className}" == "Blocks.Net.Packets.PacketParser") foundPacketParser = true;
-                if (attrs.FirstOrDefault(
-                        a => a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "Packet"))) is
-                    { } attr)
-                {
-                    // GeneratePacketImplementation(context, attr, namespaceName, className, usings, clazz, semanticModel,
-                    //     serverBoundPackets);
-                }
-
-                if (attrs.FirstOrDefault(a =>
-                        a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "EnumField"))) is
-                    { } enumFieldAttr)
-                {
-                    // GenerateEnumFieldImplementation(context, enumFieldAttr, semanticModel, className, fieldedEnums,
-                    //     namespaceName, usings, clazz);
-                }
             }
         }
 
@@ -321,46 +279,6 @@ public partial class PacketSourceGenerator : ISourceGenerator
         context.AddSource($"{packetType.FullName}.g.cs", builder.Build());
     }
 
-
-    private void GeneratePacketImplementation(GeneratorExecutionContext context, AttributeSyntax attr,
-        string namespaceName,
-        string className, string[] usings, ClassDeclarationSyntax clazz, SemanticModel semanticModel,
-        Dictionary<string, Dictionary<int, string>> serverBoundPackets)
-    {
-        var descendentTokens = attr.DescendantTokens().ToArray();
-        var byteNode = descendentTokens.FirstOrDefault(x => x.IsKind(SyntaxKind.NumericLiteralToken));
-        if (byteNode == null) return;
-        var packetId = (int)(byteNode.Value ?? 0xff);
-        var builder = StartPacketClass(namespaceName, className, packetId, usings, out var @class);
-
-        var clientBoundToken = descendentTokens.FirstOrDefault(x =>
-            x.IsKind(SyntaxKind.TrueKeyword) || x.IsKind(SyntaxKind.FalseKeyword));
-        var clientBound = clientBoundToken == null || clientBoundToken.IsKind(SyntaxKind.TrueKeyword);
-        var state =
-            descendentTokens.FirstOrDefault(x => x.IsKind(SyntaxKind.StringLiteralToken)) is var syntaxToken
-                ? (string)syntaxToken.Value!
-                : "Play";
-        var read = StartReadFrom(@class, className);
-        var write = StartWrite(@class);
-        List<string> fields = [];
-        foreach (var field in clazz.DescendantNodes().OfType<FieldDeclarationSyntax>())
-        {
-            GeneratePacketFieldImpl(field, semanticModel, read, write, fields);
-        }
-
-        EndReadFrom(read, fields.ToArray());
-
-        if (!clientBound)
-        {
-            var dict = serverBoundPackets.TryGetValue(state, out var d)
-                ? d
-                : serverBoundPackets[state] = [];
-            dict[packetId] = $"{namespaceName}.{className}";
-        }
-
-        context.AddSource($"{namespaceName}.{className}.g.cs", builder.Build());
-    }
-
     private void GeneratePacketFieldImpl(SyntaxField field, MethodReference read, MethodReference write,
         List<string> fields)
     {
@@ -406,110 +324,12 @@ public partial class PacketSourceGenerator : ISourceGenerator
         }
     }
 
-    private void GeneratePacketFieldImpl(FieldDeclarationSyntax field, SemanticModel semanticModel,
-        MethodReference read, MethodReference write, List<string> fields)
-    {
-        // Now let's check first if the field has a very simple attribute
-        var fieldAttrs = field.DescendantNodes().OfType<AttributeSyntax>().ToArray();
-        var decl = field.Declaration;
-        var targetType = decl.Type.GetText().ToString().Trim();
-        var name = decl.Variables.First().Identifier.Text;
-        // The simplest type of packet field to handle
-        if (fieldAttrs.FirstOrDefault(a =>
-                a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "PacketField"))) is { } fieldAttr)
-        {
-            var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
-                ? primType
-                : targetType;
-            AddSimpleFieldRead(read, name, targetType, primitiveType);
-            AddSimpleFieldWrite(write, name, targetType, primitiveType);
-            fields.Add(name);
-        }
-
-        // Almost as simple
-        if (fieldAttrs.FirstOrDefault(a =>
-                a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "PacketEnum"))) is
-            { } enumAttr)
-        {
-            var descendantTokens = enumAttr.DescendantTokens().ToArray();
-            var identNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.IdentifierToken));
-            var relatedType = semanticModel.GetTypeInfo(identNode.Parent!).Type!.Name;
-            var primitiveType = PrimitiveRemap.TryGetValue(relatedType, out var primType)
-                ? primType
-                : relatedType;
-            AddEnumFieldRead(read, name, targetType, primitiveType);
-            AddEnumFieldWrite(write, name, primitiveType);
-            fields.Add(name);
-        }
-
-        if (fieldAttrs.FirstOrDefault(a =>
-                a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "PacketArrayField"))) is
-            { } arrayAttr)
-        {
-            var descendantTokens = arrayAttr.DescendantTokens().ToArray();
-            var stringNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.StringLiteralToken));
-            var stringValue = (string)stringNode.Value!;
-            // We want to remove the [] from the target type here, as we know that will be there
-            var targetTypeSubType = targetType.Substring(0, targetType.Length - 2);
-            var primitiveSubType = PrimitiveRemap.TryGetValue(targetTypeSubType, out var primSubType)
-                ? primSubType
-                : targetTypeSubType;
-            AddArrayFieldRead(read, name, targetTypeSubType, primitiveSubType, stringValue);
-            AddArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType, stringValue);
-            fields.Add(name);
-        }
-
-        if (fieldAttrs.FirstOrDefault(a =>
-                a.DescendantTokens().Any(dt => CheckForAttribute(dt, semanticModel, "PacketOptionalField"))) is
-            { } optAttr)
-        {
-            var descendantTokens = optAttr.DescendantTokens().ToArray();
-            var stringNode = descendantTokens.LastOrDefault(dt => dt.IsKind(SyntaxKind.StringLiteralToken));
-            var stringValue = (string)stringNode.Value!;
-            var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
-                ? primType
-                : targetType;
-            AddOptionalFieldRead(read, name, targetType, primitiveType, stringValue);
-            AddOptionalFieldWrite(write, name, targetType, primitiveType, stringValue);
-            fields.Add(name);
-        }
-    }
-
     private bool CheckForAttribute(SyntaxToken token, SemanticModel model, string attr)
     {
         if (!token.IsKind(SyntaxKind.IdentifierToken)) return false;
         var name = model.GetTypeInfo(token.Parent!).Type?.Name;
         return name == attr;
     }
-
-// Let's do this a simple way
-    private SourceFileBuilder StartPacketClass(string ns, string className, int id, IEnumerable<string> usings,
-        out StructuredTypeReference @class)
-    {
-        var sfb = new SourceFileBuilder().WithFileScopedNamespace(ns).Using(usings)
-            .Using("Blocks.Net.Packets.Primitives").AddClass(className, out @class);
-        @class.Partial().AddProperty("int", "PacketId",
-            prop => prop.Public().AddGetter(get => get.Return(new IntegerLiteral(id, @base: IntegerBase.Hexadecimal))));
-        return sfb;
-    }
-
-    private SourceFileBuilder StartSubPacketStruct(string ns, string structName, IEnumerable<string> usings,
-        out StructuredTypeReference @struct)
-    {
-        var sfb = new SourceFileBuilder().WithFileScopedNamespace(ns).Using(usings)
-            .Using("Blocks.Net.Packets.Primitives").AddStruct(structName, out @struct);
-        @struct.Partial();
-        return sfb;
-    }
-
-    private SourceFileBuilder StartEnumFieldClass(string ns, string className, string enumName,
-        IEnumerable<string> usings, out StructuredTypeReference @class)
-    {
-        var sfb = new SourceFileBuilder().WithFileScopedNamespace(ns).Using(usings).AddClass(className, out @class);
-        @class.Partial().Inherit($"I{enumName}");
-        return sfb;
-    }
-
 
     private MethodReference StartReadFrom(StructuredTypeReference ty, string className, bool isSubPacket = false)
     {
