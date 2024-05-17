@@ -4,8 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct Nbt(NbtTag v)
+public readonly struct Nbt(NbtTag v)
 {
     public NbtTag Value => v;
     

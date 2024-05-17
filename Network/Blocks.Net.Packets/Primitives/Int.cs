@@ -3,8 +3,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct Int(int v)
+public readonly struct Int(int v)
 {
     public int Value => v;
     

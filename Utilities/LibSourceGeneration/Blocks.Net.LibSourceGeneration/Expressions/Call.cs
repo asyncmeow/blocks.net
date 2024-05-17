@@ -8,7 +8,7 @@ public class Call(IExpression binder, string methodName, params IExpression[] ar
 {
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        if (binder is Variable or GetField or Subscript or GetStatic)
+        if (binder is Variable or GetField or Subscript or GetStatic or NullPropagate)
         {
             return binder.Build(builder, indentation, indentationLevel).Append('.').Append(methodName).Append('(').Join(
                     ", ",

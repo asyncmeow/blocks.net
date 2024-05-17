@@ -3,8 +3,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct Uuid(Guid v)
+public readonly struct Uuid(Guid v)
 {
     public Guid Value => v;
     

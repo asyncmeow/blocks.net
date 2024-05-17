@@ -7,7 +7,7 @@ public class GetField(IExpression lhs, string fieldName) : IExpression
 {
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        if (lhs is Variable or GetField or Subscript or GetStatic)
+        if (lhs is Variable or GetField or Subscript or GetStatic or NullPropagate)
         {
             return lhs.Build(builder, indentation, indentationLevel).Append('.').Append(fieldName);
         }

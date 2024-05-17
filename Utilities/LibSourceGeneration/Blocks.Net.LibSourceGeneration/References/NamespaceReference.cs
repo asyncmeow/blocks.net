@@ -142,14 +142,14 @@ public class NamespaceReference(string name) : ITopLevelProvider<NamespaceRefere
 
     public NamespaceReference AddInterface(string name, out StructuredTypeReference @interface)
     {
-        @interface = new StructuredTypeReference(name).AsStruct();
+        @interface = new StructuredTypeReference(name).AsInterface();
         Children.Add(@interface);
         return this;
     }
 
     public NamespaceReference AddInterface(string name, Action<StructuredTypeReference> construct)
     {
-        var @interface = new StructuredTypeReference(name).AsStruct();
+        var @interface = new StructuredTypeReference(name).AsInterface();
         Children.Add(@interface);
         construct(@interface);
         return this;

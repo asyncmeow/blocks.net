@@ -4,8 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct UnsignedByte(byte v)
+public readonly struct UnsignedByte(byte v)
 {
     public byte Value => v;
     

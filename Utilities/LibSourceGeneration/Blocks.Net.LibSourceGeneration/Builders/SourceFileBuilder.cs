@@ -14,6 +14,7 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     private readonly List<string> _usings = [];
     private readonly List<string> _staticUsings = [];
     private Dictionary<string, string> _typeUsings = []; // This is used to generate aliasing for types, I'm not sure how needed it is
+    private bool _nullable;
     
     // An optional string representing the file scoped namespaces
     private string? _fileScopedNamespace = null;
@@ -87,6 +88,12 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
         return this;
     }
 
+    public SourceFileBuilder Nullable()
+    {
+        _nullable = true;
+        return this;
+    }
+
     /// <summary>
     /// Add a file scoped namespace to this source file
     /// </summary>
@@ -105,6 +112,8 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     /// <inheritdoc />
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
+        if (_nullable) builder.AppendRepeating(indentation, indentationLevel).Append("#nullable enable\n");
+        
         foreach (var import in _usings.Distinct())
         {
             builder.AppendRepeating(indentation, indentationLevel).Append($"using {import};\n");
@@ -187,14 +196,14 @@ public class SourceFileBuilder : ITopLevelProvider<SourceFileBuilder>, IBuildabl
     /// <inheritdoc />
     public SourceFileBuilder AddInterface(string name, out StructuredTypeReference @interface)
     {
-        @interface = new StructuredTypeReference(name).AsStruct();
+        @interface = new StructuredTypeReference(name).AsInterface();
         Children.Add(@interface);
         return this;
     }
 
     public SourceFileBuilder AddInterface(string name, Action<StructuredTypeReference> construct)
     {
-        var @interface = new StructuredTypeReference(name).AsStruct();
+        var @interface = new StructuredTypeReference(name).AsInterface();
         Children.Add(@interface);
         construct(@interface);
         return this;

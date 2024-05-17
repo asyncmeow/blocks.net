@@ -4,8 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct String(string v)
+public readonly struct String(string v)
 {
     public string Value => v;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

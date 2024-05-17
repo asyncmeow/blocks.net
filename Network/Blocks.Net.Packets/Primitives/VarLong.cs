@@ -4,8 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct VarLong(long v)
+public readonly struct VarLong(long v)
 {
     private const ulong SegmentBits = 0x7f;
     private const ulong ContinueBit = 0x80;

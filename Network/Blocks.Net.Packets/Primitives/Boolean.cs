@@ -4,8 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct Boolean(bool v)
+public readonly struct Boolean(bool v)
 {
     public bool Value => v;
     

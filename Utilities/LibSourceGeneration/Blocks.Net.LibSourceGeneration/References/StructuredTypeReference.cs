@@ -221,14 +221,14 @@ public class StructuredTypeReference(string name)
 
     public StructuredTypeReference AddConversionOperator(TypeReference to, out MethodReference method)
     {
-        method = new MethodReference(to);
+        method = new MethodReference(to).Static().Operator();
         _children.Add(method);
         return this;
     }
 
     public StructuredTypeReference AddConversionOperator(TypeReference to, Action<MethodReference> construct)
     {
-        var method = new MethodReference(to);
+        var method = new MethodReference(to).Static().Operator();
         construct(method);
         _children.Add(method);
         return this;

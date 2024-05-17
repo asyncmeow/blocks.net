@@ -3,8 +3,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-[PublicAPI]
-public struct LengthInferredByteArray(byte[] v)
+public readonly struct LengthInferredByteArray(byte[] v)
 {
     public byte[] Value => v;
     

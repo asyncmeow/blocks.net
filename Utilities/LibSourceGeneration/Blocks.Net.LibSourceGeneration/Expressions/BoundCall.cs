@@ -9,7 +9,7 @@ public class BoundCall(IExpression binder, params IExpression[] arguments) : IEx
 {
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
-        if (binder is Variable or GetField or Subscript or GetStatic)
+        if (binder is Variable or GetField or Subscript or GetStatic or NullPropagate)
         {
             return binder.Build(builder, indentation, indentationLevel).Append('(').Join(", ",
                     arguments.Select(x => x.Build(new StringBuilder(), indentation, indentationLevel).ToString()))
