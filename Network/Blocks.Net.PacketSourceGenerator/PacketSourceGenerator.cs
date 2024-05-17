@@ -219,6 +219,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
             };
         enumeration.Usings.Add(type.Module.Namespace);
         enumeration.Usings.AddRange(type.Module.Usings);
+        enumeration.OverloadedFields.Add(fieldName,type.FullName);
 
         var read = StartReadFrom(impl, className);
         var write = StartWrite(impl);

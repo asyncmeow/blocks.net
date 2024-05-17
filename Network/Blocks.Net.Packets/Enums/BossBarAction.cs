@@ -50,7 +50,7 @@ public partial class BossBarActionAdd
     [PacketField] public float Health;
     [PacketEnum(typeof(VarInt))] public BossBarColor Color;
     [PacketEnum(typeof(VarInt))] public BossBarDividers Dividers;
-    [PacketEnum(typeof(UnsignedByte))] public BossBarFlags Flags;
+    [PacketEnum(typeof(byte))] public BossBarFlags Flags;
 }
 
 [EnumField(typeof(BossBarAction))]
@@ -68,12 +68,12 @@ public partial class BossBarActionUpdateTitle
 [EnumField(typeof(BossBarAction))]
 public partial class BossBarActionUpdateStyle
 {
-    [PacketEnum(typeof(VarInt))] public BossBarColor Color;
-    [PacketEnum(typeof(VarInt))] public BossBarDividers Dividers;
+    [PacketEnum(typeof(byte))] public BossBarColor Color;
+    [PacketEnum(typeof(byte))] public BossBarDividers Dividers;
 }
 
 [EnumField(typeof(BossBarAction))]
 public partial class BossBarActionUpdateFlags
 {
-    [PacketEnum(typeof(UnsignedByte))] public BossBarFlags Flags;
+    [PacketEnum(typeof(byte))] public BossBarFlags Flags;
 }
