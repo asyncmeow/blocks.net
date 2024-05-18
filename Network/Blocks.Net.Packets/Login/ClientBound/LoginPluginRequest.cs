@@ -9,6 +9,6 @@ namespace Blocks.Net.Packets.Login.ClientBound;
 public partial class LoginPluginRequest : IPacket
 {
     [PacketField] public VarInt MessageId;
-    [PacketField] public string Channel;
+    [PacketField] public Identifier Channel;
     [PacketField] public LengthInferredByteArray Data;
 }

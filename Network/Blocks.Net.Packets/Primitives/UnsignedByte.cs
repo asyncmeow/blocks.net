@@ -20,7 +20,7 @@ public readonly struct UnsignedByte(byte v)
         stream.WriteByte(v);
     }
 
-    public static UnsignedShort ReadFrom(MemoryStream stream)
+    public static UnsignedByte ReadFrom(MemoryStream stream)
     {
         return stream.CheckedReadByte();
     }

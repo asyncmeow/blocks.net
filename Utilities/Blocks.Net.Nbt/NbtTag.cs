@@ -17,6 +17,8 @@ public abstract class NbtTag
         if (writeName && TagType != NbtTagType.End && Name != null) stream.WriteLengthPrefixedString(Name!);
         WriteData(stream);
     }
+
+    public static NbtTag Null => new EndTag();
     
     public static NbtTag Read(Stream stream, bool readName=true)
     {

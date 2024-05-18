@@ -1,11 +1,9 @@
 ﻿using Blocks.Net.Packets.Primitives;
 using Blocks.Net.PacketSourceGenerator.Attributes;
-using JetBrains.Annotations;
 
-namespace Blocks.Net.Packets.Configuration.ServerBound;
+namespace Blocks.Net.Packets.Play.ClientBound;
 
-[PublicAPI]
-[Packet(0x01,false,"Configuration")]
+[Packet(0x18,true,"Play")]
 public partial class PluginMessage : IPacket
 {
     [PacketField] public Identifier Channel;

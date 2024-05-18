@@ -8,6 +8,6 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x00,true,"Configuration")]
 public partial class PluginMessage : IPacket
 {
-    [PacketField] public string Channel;
+    [PacketField] public Identifier Channel;
     [PacketField] public LengthInferredByteArray Data;
 }
