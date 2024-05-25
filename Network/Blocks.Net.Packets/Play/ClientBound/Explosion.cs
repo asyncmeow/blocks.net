@@ -28,6 +28,6 @@ public partial class Explosion : IPacket
     [PacketEnum(typeof(VarInt))] public Interaction BlockInteraction;
     [PacketField] public ParticleImpl SmallExplosionParticle;
     [PacketField] public ParticleImpl LargeExplosionParticle;
-    [PacketField] public SoundEffect SoundEffect;
+    [PacketField] public SoundEffect Effect;
 }
 

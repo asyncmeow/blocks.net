@@ -8,24 +8,24 @@ public static class AttributeExtensions
 {
     private static readonly Dictionary<string, Type> TypeKeywords = new()
     {
-        {"void", typeof(void)},
-        {"byte",typeof(byte)},
-        {"sbyte", typeof(sbyte)},
-        {"short", typeof(short)},
-        {"ushort", typeof(ushort)},
-        {"int", typeof(int)},
-        {"uint", typeof(uint)},
-        {"long",typeof(long)},
-        {"ulong",typeof(ulong)},
-        {"float",typeof(float)},
-        {"double",typeof(double)},
-        {"decimal",typeof(decimal)},
-        {"string", typeof(string)},
-        {"char",typeof(char)},
-        {"nint",typeof(nint)},
-        {"nuint",typeof(nuint)}
+        { "void", typeof(void) },
+        { "byte", typeof(byte) },
+        { "sbyte", typeof(sbyte) },
+        { "short", typeof(short) },
+        { "ushort", typeof(ushort) },
+        { "int", typeof(int) },
+        { "uint", typeof(uint) },
+        { "long", typeof(long) },
+        { "ulong", typeof(ulong) },
+        { "float", typeof(float) },
+        { "double", typeof(double) },
+        { "decimal", typeof(decimal) },
+        { "string", typeof(string) },
+        { "char", typeof(char) },
+        { "nint", typeof(nint) },
+        { "nuint", typeof(nuint) }
     };
-    
+
     /// <summary>
     /// Coerce an attribute syntax to an attribute
     /// Currently doesn't support named arguments, field arguments, or enum arguments
@@ -53,12 +53,18 @@ public static class AttributeExtensions
                     case LiteralExpressionSyntax literalExpressionSyntax:
                         args.Add(literalExpressionSyntax.Token.Value);
                         break;
+                    case InvocationExpressionSyntax invocationExpressionSyntax
+                        when invocationExpressionSyntax.Expression.ToString() == "nameof":
+                        args.Add(invocationExpressionSyntax.ArgumentList.DescendantNodes()
+                            .OfType<IdentifierNameSyntax>().First().Identifier.ToString());
+                        break;
                     default:
                         throw new Exception(
                             $"Cannot currently coerce expressions of type: {expression.Kind()} to attribute arguments!");
                 }
             }
         }
+
         return (T)Activator.CreateInstance(typeof(T), args.ToArray());
     }
 }

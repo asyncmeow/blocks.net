@@ -76,9 +76,9 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 GeneratePacketImplementation(context, type, packet, serverBoundPackets);
             }
 
-            if (type.HasAttribute<SubPacket>())
+            if (type.GetAttributes<SubPacket>().FirstOrDefault() is {} subPacket)
             {
-                GenerateSubPacketImplementation(context, type);
+                GenerateSubPacketImplementation(context, type, subPacket);
             }
 
             if (type.GetAttributes<EnumField>().FirstOrDefault() is { } enumField)
@@ -254,13 +254,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
         context.AddSource($"{type.FullName}.g.cs", sfb.Build());
     }
 
-    private void GenerateSubPacketImplementation(GeneratorExecutionContext context, SyntaxType subPacketType)
+    private void GenerateSubPacketImplementation(GeneratorExecutionContext context, SyntaxType subPacketType, SubPacket subPacket)
     {
         var sfb = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");
-        ;
         var impl = subPacketType.GenerateImplementation(sfb);
         var read = StartReadFrom(impl, subPacketType.Name, true);
+        read.WithParameters(subPacket.ExtraArgs.Select((x, i) => new ParameterReference(x, $"_{i}")).ToArray());
         var write = StartWrite(impl, true);
+        write.WithParameters(subPacket.ExtraArgs.Select((x, i) => new ParameterReference(x, $"_{i}")).ToArray());
         List<string> fields = [];
         foreach (var field in subPacketType.Fields)
         {
@@ -304,13 +305,13 @@ public partial class PacketSourceGenerator : ISourceGenerator
     {
         var targetType = field.Type;
         var name = field.Name;
-        if (field.HasAttribute<PacketField>())
+        if (field.GetAttributes<PacketField>().FirstOrDefault() is {} fieldAttr)
         {
             var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
                 ? primType
                 : targetType;
-            AddSimpleFieldRead(read, name, targetType, primitiveType);
-            AddSimpleFieldWrite(write, name, targetType, primitiveType);
+            AddSimpleFieldRead(read, name, targetType, primitiveType,fieldAttr.InjectedArguments);
+            AddSimpleFieldWrite(write, name, targetType, primitiveType,fieldAttr.InjectedArguments);
             fields.Add(name);
         }
         else if (field.GetAttributes<PacketEnum>().FirstOrDefault() is { } enumAttr)
@@ -329,8 +330,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var primitiveSubType = PrimitiveRemap.TryGetValue(targetTypeSubType, out var primSubType)
                 ? primSubType
                 : targetTypeSubType;
-            AddArrayFieldRead(read, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl);
-            AddArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl);
+            AddArrayFieldRead(read, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl,packetArrayField.InjectedArgs);
+            AddArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType, packetArrayField.ArraySizeControl,packetArrayField.InjectedArgs);
             fields.Add(name);
         }
         else if (field.GetAttributes<PacketOptionalField>().FirstOrDefault() is { } packetOptionalField)
@@ -338,8 +339,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var primitiveType = PrimitiveRemap.TryGetValue(targetType, out var primType)
                 ? primType
                 : targetType;
-            AddOptionalFieldRead(read, name, targetType, primitiveType, packetOptionalField.ControllingCondition);
-            AddOptionalFieldWrite(write, name, targetType, primitiveType, packetOptionalField.ControllingCondition);
+            AddOptionalFieldRead(read, name, targetType, primitiveType, packetOptionalField.ControllingCondition,packetOptionalField.InjectedArgs);
+            AddOptionalFieldWrite(write, name, targetType, primitiveType, packetOptionalField.ControllingCondition,packetOptionalField.InjectedArgs);
             fields.Add(name);
         }
         else if (field.GetAttributes<PacketSplitEnumDataField>().FirstOrDefault() is { } packetSplitEnumDataField)
@@ -355,9 +356,9 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 ? primSubType
                 : targetTypeSubType;
             AddOptionalArrayFieldRead(read, name, targetTypeSubType, primitiveSubType,
-                packetOptionalArrayField.ArraySizeControl, packetOptionalArrayField.ControllingCondition);
+                packetOptionalArrayField.ArraySizeControl, packetOptionalArrayField.ControllingCondition,packetOptionalArrayField.InjectedArgs);
             AddOptionalArrayFieldWrite(write, name, targetTypeSubType, primitiveSubType,
-                packetOptionalArrayField.ArraySizeControl, packetOptionalArrayField.ControllingCondition);
+                packetOptionalArrayField.ArraySizeControl, packetOptionalArrayField.ControllingCondition,packetOptionalArrayField.InjectedArgs);
             fields.Add(name);
         }
     }
@@ -374,9 +375,9 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void AddSimpleFieldRead(MethodReference method, string fieldName, TypeReference targetType,
-        TypeReference primitiveType)
+        TypeReference primitiveType, IEnumerable<string> injectedArguments)
     {
-        var call = new TypeCall(primitiveType, "ReadFrom", new Variable("stream"));
+        var call = new TypeCall(primitiveType, "ReadFrom", [new Variable("stream"), ..injectedArguments.Select(x => new InjectedExpression(x))]);
         var init = primitiveType == targetType ? (IExpression)call : new CastExpression(targetType, call);
         method.DeclareVariable(fieldName, init);
     }
@@ -391,7 +392,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void AddArrayFieldRead(MethodReference method, string fieldName, TypeReference targetSubType,
-        TypeReference primitiveSubType, string lengthControl)
+        TypeReference primitiveSubType, string lengthControl, IEnumerable<string> injectedArguments)
     {
         var lengthVarName = $"__{fieldName}_length__";
         var iterVarName = $"__{fieldName}_iter__";
@@ -400,7 +401,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         var iterVar = new Variable(iterVarName);
         var field = new Variable(fieldName);
         method.DeclareVariable(fieldName, new NewArray(targetSubType, lengthVar));
-        var call = new TypeCall(primitiveSubType, "ReadFrom", new Variable("stream"));
+        var call = new TypeCall(primitiveSubType, "ReadFrom", [new Variable("stream"), ..injectedArguments.Select(x => new InjectedExpression(x))]);
         var init = primitiveSubType == targetSubType ? (IExpression)call : new CastExpression(targetSubType, call);
         var assign = new Assignment(new Subscript(field, iterVar), init);
         method.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
@@ -409,10 +410,10 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void AddOptionalFieldRead(MethodReference method, string fieldName, TypeReference targetType,
-        TypeReference primitiveType, string optionalControl)
+        TypeReference primitiveType, string optionalControl, IEnumerable<string> injectedArguments)
     {
         method.DeclareVariable(fieldName, new Default(targetType));
-        var call = new TypeCall(primitiveType, "ReadFrom", new Variable("stream"));
+        var call = new TypeCall(primitiveType, "ReadFrom", [new Variable("stream"), ..injectedArguments.Select(x => new InjectedExpression(x))]);
         var init = primitiveType == targetType ? (IExpression)call : new CastExpression(targetType, call);
         var assign = new Assignment(fieldName, init);
         method.If(new InjectedExpression(optionalControl), statement => statement.Add(assign));
@@ -424,7 +425,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
             new TypeCall(enumDataType, "ReadFrom", new Variable("stream"), new InjectedExpression(control)));
 
     private void AddOptionalArrayFieldRead(MethodReference method, string fieldName, TypeReference targetSubType,
-        TypeReference primitiveSubType, string lengthControl, string optionalControl)
+        TypeReference primitiveSubType, string lengthControl, string optionalControl, IEnumerable<string> injectedArguments)
     {
         var lengthVarName = $"__{fieldName}_length__";
         var iterVarName = $"__{fieldName}_iter__";
@@ -436,7 +437,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var iterVar = new Variable(iterVarName);
             var field = new Variable(fieldName);
             block.Add(new Assignment(fieldName, new NewArray(targetSubType, lengthVar)));
-            var call = new TypeCall(primitiveSubType, "ReadFrom", new Variable("stream"));
+            var call = new TypeCall(primitiveSubType, "ReadFrom", [new Variable("stream"), ..injectedArguments.Select(x => new InjectedExpression(x))]);
             var init = primitiveSubType == targetSubType ? (IExpression)call : new CastExpression(targetSubType, call);
             var assign = new Assignment(new Subscript(field, iterVar), init);
             block.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
@@ -466,12 +467,12 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void AddSimpleFieldWrite(MethodReference method, string fieldName, TypeReference targetType,
-        TypeReference primitiveType)
+        TypeReference primitiveType, IEnumerable<string> injectedArguments)
     {
         var field = new Variable(fieldName);
         var stream = new Variable("stream");
         method.Add(new Call(targetType == primitiveType ? field : new CastExpression(primitiveType, field), "WriteTo",
-            stream));
+            [stream, ..injectedArguments.Select(x => new InjectedExpression(x))]));
     }
 
     private void AddEnumFieldWrite(MethodReference method, string fieldName, TypeReference primitiveType)
@@ -482,7 +483,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void AddArrayFieldWrite(MethodReference method, string fieldName, TypeReference targetSubType,
-        TypeReference primitiveSubType, string lengthControl)
+        TypeReference primitiveSubType, string lengthControl, IEnumerable<string> injectedArguments)
     {
         var lengthVarName = $"__{fieldName}_length__";
         var iterVarName = $"__{fieldName}_iter__";
@@ -497,14 +498,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
             baseVar = new CastExpression(primitiveSubType, baseVar);
         }
 
-        var call = new Call(baseVar, "WriteTo", stream);
+        var call = new Call(baseVar, "WriteTo", [stream, ..injectedArguments.Select(x => new InjectedExpression(x))]);
         method.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
             new LessThan(iterVar, lengthVar), new PostIncrement(iterVar),
             loop => loop.Add(call));
     }
 
     private void AddOptionalFieldWrite(MethodReference method, string fieldName, TypeReference targetType,
-        TypeReference primitiveType, string optionalControl)
+        TypeReference primitiveType, string optionalControl, IEnumerable<string> injectedArguments)
     {
         IExpression baseVar = new Variable(fieldName);
         if (targetType != primitiveType)
@@ -513,14 +514,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
         }
 
         var stream = new Variable("stream");
-        var call = new Call(baseVar, "WriteTo", stream);
+        var call = new Call(baseVar, "WriteTo", [stream, ..injectedArguments.Select(x => new InjectedExpression(x))]);
         method.If(new InjectedExpression(optionalControl), ifStatement => ifStatement.Add(call));
     }
 
     private void AddSplitEnumFieldWrite(MethodReference method, string fieldName) =>
         method.Add(new Call(new NullPropagate(new Variable(fieldName)), "Write", new Variable("stream")));
     private void AddOptionalArrayFieldWrite(MethodReference method, string fieldName, TypeReference targetSubType,
-        TypeReference primitiveSubType, string lengthControl, string optionalControl)
+        TypeReference primitiveSubType, string lengthControl, string optionalControl, IEnumerable<string> injectedArguments)
     {
         method.If(new InjectedExpression(optionalControl), block =>
         {
@@ -537,7 +538,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 baseVar = new CastExpression(primitiveSubType, baseVar);
             }
 
-            var call = new Call(baseVar, "WriteTo", stream);
+            var call = new Call(baseVar, "WriteTo", [stream, ..injectedArguments.Select(x => new InjectedExpression(x))]);
             block.For(new VariableDeclarationStatement(iterVarName, new IntegerLiteral(0)),
                 new LessThan(iterVar, lengthVar), new PostIncrement(iterVar),
                 loop => loop.Add(call));

@@ -10,7 +10,7 @@ public static class SyntaxNodeExtensions
 {
     public static bool HasToken(this SyntaxNode node, SyntaxKind kind)
     {
-        return node.DescendantTokens().Any(x => x.IsKind(kind));
+        return node.DescendantTokens(x => x == node).Any(x => x.IsKind(kind));
     }
 
     public static VisibilityLevel GetVisibility(this SyntaxNode node)

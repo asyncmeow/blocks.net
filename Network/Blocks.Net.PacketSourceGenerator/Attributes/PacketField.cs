@@ -21,4 +21,7 @@
 ///
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public class PacketField : Attribute;
+public class PacketField(params string[] injectedArguments) : Attribute
+{
+    public IEnumerable<string> InjectedArguments => injectedArguments;
+}
