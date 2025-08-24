@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct VarLong(long v)
+public readonly struct VarLong(long v) : IPrimitive
 {
     private const ulong SegmentBits = 0x7f;
     private const ulong ContinueBit = 0x80;
@@ -30,7 +30,7 @@ public readonly struct VarLong(long v)
     }
     
     
-    public static VarLong ReadFrom(MemoryStream stream)
+    public static VarLong ReadFrom(Stream stream)
     {
         var value = 0UL;
         var position = 0;

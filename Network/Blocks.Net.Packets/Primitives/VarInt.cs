@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Primitives;
 
 
-public readonly struct VarInt(int v)
+public readonly struct VarInt(int v) : IPrimitive
 {
     private const uint SegmentBits = 0x7f;
     private const uint ContinueBit = 0x80;

@@ -21,6 +21,13 @@ public partial class ClientInformation : IPacket
         Right = 1
     }
 
+    public enum ClientParticleStatus
+    {
+        All = 0,
+        Decreased = 1,
+        Minimal = 2,
+    }
+
     [Flags]
     public enum ClientDisplayedSkinParts : byte
     {
@@ -41,4 +48,5 @@ public partial class ClientInformation : IPacket
     [PacketEnum(typeof(VarInt))] public ClientMainHand MainHand;
     [PacketField] public bool EnableTextFiltering;
     [PacketField] public bool AllowServerListings;
+    [PacketEnum(typeof(VarInt))] public ClientParticleStatus ParticleStatus;
 }

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Boolean(bool v)
+public readonly struct Boolean(bool v) : IPrimitive
 {
     public bool Value => v;
     
@@ -17,5 +17,5 @@ public readonly struct Boolean(bool v)
 
     public void WriteTo(Stream stream) => stream.WriteByte((byte)(v ? 1 : 0));
 
-    public static Boolean ReadFrom(MemoryStream stream) => stream.CheckedReadByte() == 1;
+    public static Boolean ReadFrom(Stream stream) => stream.CheckedReadByte() == 1;
 }

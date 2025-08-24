@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using Blocks.Net.Nbt;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Nbt(NbtTag v)
+public readonly struct Nbt(NbtTag v) : IPrimitive
 {
     public NbtTag Value => v;
     
@@ -15,7 +16,7 @@ public readonly struct Nbt(NbtTag v)
     public static implicit operator Nbt(NbtTag v) => new(v);
 
 
-    public static Nbt ReadFrom(MemoryStream stream) => NbtTag.Read(stream, false);
+    public static Nbt ReadFrom(Stream stream) => NbtTag.Read(stream, false);
 
     public void WriteTo(Stream stream)
     {

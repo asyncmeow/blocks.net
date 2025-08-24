@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Blocks.Net.Packets.Utilities;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public struct Identifier(string ns, string name)
+public struct Identifier(string ns, string name) : IPrimitive
 {
     public string Value => $"{ns}:{name}";
     public string Namespace => ns;
@@ -25,7 +26,7 @@ public struct Identifier(string ns, string name)
         ((String)Value).WriteTo(stream);
     }
 
-    public static Identifier ReadFrom(MemoryStream stream)
+    public static Identifier ReadFrom(Stream stream)
     {
         var length = (int)VarInt.ReadFrom(stream);
         using var reader = new BinaryReader(stream, Encoding.Unicode, true);

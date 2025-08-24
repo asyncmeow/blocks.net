@@ -1,6 +1,8 @@
-﻿namespace Blocks.Net.Packets.Primitives;
+﻿using Blocks.Net.Packets.Utilities;
 
-public readonly struct Angle(byte fractionalTurns)
+namespace Blocks.Net.Packets.Primitives;
+
+public readonly struct Angle(byte fractionalTurns) : IPrimitive
 {
     public double Degrees => fractionalTurns * 360d / 256d;
     public byte FractionalTurns => fractionalTurns;
@@ -10,7 +12,7 @@ public readonly struct Angle(byte fractionalTurns)
     public static explicit operator double(Angle angle) => angle.Degrees;
     public static explicit operator Angle(double d) => new((byte)(d * 256d / 360d));
 
-    public static Angle ReadFrom(MemoryStream stream) => (byte)UnsignedByte.ReadFrom(stream);
+    public static Angle ReadFrom(Stream stream) => (byte)UnsignedByte.ReadFrom(stream);
 
-    public void WriteTo(MemoryStream stream) => new UnsignedByte(fractionalTurns).WriteTo(stream);
+    public void WriteTo(Stream stream) => new UnsignedByte(fractionalTurns).WriteTo(stream);
 }

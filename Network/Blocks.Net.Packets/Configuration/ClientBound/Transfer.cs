@@ -5,9 +5,9 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x08,true,"Configuration")]
-public partial class RemoveResourcePack : IPacket
+[Packet(0x0B, true, "Configuration")]
+public partial class Transfer : IPacket
 {
-    [PacketField] public bool HasUuid;
-    [PacketOptionalField("HasUuid")] public Uuid Uuid;
+    [PacketField] public string Host;
+    [PacketField] public VarInt Port;
 }

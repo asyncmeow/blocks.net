@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
-using Blocks.Net.Nbt.Utilities;
+using Blocks.Net.Packets.Utilities;
+using StreamUtilities = Blocks.Net.Nbt.Utilities.StreamUtilities;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Short(short v)
+public readonly struct Short(short v) : IPrimitive
 {
     public short Value => v;
 
@@ -21,10 +22,10 @@ public readonly struct Short(short v)
         stream.WriteByte((byte)(Value & 0xff));
     }
 
-    public static Short ReadFrom(MemoryStream stream)
+    public static Short ReadFrom(Stream stream)
     {
-        var hi = stream.CheckedReadByte();
-        var lo = stream.CheckedReadByte();
+        var hi = StreamUtilities.CheckedReadByte(stream);
+        var lo = StreamUtilities.CheckedReadByte(stream);
         var v = (short)((hi << 8) | lo);
         return v;
     }

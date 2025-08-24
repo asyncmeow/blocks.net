@@ -2,11 +2,12 @@
 using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
+using TagsRegistry = Blocks.Net.Packets.SubPackets.Configuration.TagsRegistry;
 
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x09,true,"Configuration")]
+[Packet(0x0D,true,"Configuration")]
 public partial class UpdateTags : IPacket
 {
     [PacketField] public VarInt TagsCount;

@@ -4,8 +4,5 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x04,true,"Configuration")]
-public partial class KeepAlive : IPacket
-{
-    [PacketField] public long KeepAliveId;
-}
+[Packet(0x06, true, "Configuration")]
+public partial class ResetChat : IPacket;

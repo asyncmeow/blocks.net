@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Uuid(Guid v)
+public readonly struct Uuid(Guid v) : IPrimitive
 {
     public Guid Value => v;
     
@@ -13,7 +14,7 @@ public readonly struct Uuid(Guid v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Uuid(Guid v) => new(v);
 
-    public static Uuid ReadFrom(MemoryStream stream)
+    public static Uuid ReadFrom(Stream stream)
     {
         var bytes = new byte[16];
         stream.ReadExactly(bytes);

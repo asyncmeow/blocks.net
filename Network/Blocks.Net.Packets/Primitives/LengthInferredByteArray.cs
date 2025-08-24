@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct LengthInferredByteArray(byte[] v)
+public readonly struct LengthInferredByteArray(byte[] v) : IPrimitive
 {
     public byte[] Value => v;
     
@@ -15,7 +16,7 @@ public readonly struct LengthInferredByteArray(byte[] v)
     public static implicit operator byte[](LengthInferredByteArray v) => v.Value;
 
 
-    public static LengthInferredByteArray ReadFrom(MemoryStream stream)
+    public static LengthInferredByteArray ReadFrom(Stream stream)
     {
         var length = stream.Length - stream.Position;
         var data = new byte[length];

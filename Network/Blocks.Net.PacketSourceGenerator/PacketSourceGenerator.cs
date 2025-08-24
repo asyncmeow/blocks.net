@@ -76,7 +76,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 GeneratePacketImplementation(context, type, packet, serverBoundPackets);
             }
 
-            if (type.GetAttributes<SubPacket>().FirstOrDefault() is {} subPacket)
+            if (type.GetAttributes<SubPacket>().FirstOrDefault() is { } subPacket)
             {
                 GenerateSubPacketImplementation(context, type, subPacket);
             }
@@ -114,11 +114,11 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 enumInterface => enumInterface.Public()
                     .AddMethod("void", "Write",
                         method => method.WithoutImplementation()
-                            .WithParameters(new ParameterReference(typeof(MemoryStream), "stream")).Public())
+                            .WithParameters(new ParameterReference(typeof(Stream), "stream")).Public())
                     .AddMethod($"I{fieldedEnum.Name}?", "ReadFrom", read =>
                     {
                         read.Public().Static()
-                            .WithParameters(new ParameterReference(typeof(MemoryStream), "stream"),
+                            .WithParameters(new ParameterReference(typeof(Stream), "stream"),
                                 new ParameterReference(fieldedEnum.Name, "type"))
                             .DeclareVariable($"I{fieldedEnum.Name}?", "data", new Default($"I{fieldedEnum.Name}"));
                         var stream = new Variable("stream");
@@ -145,7 +145,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                         var type = new Variable("type");
                         var data = new Variable("data");
                         read.Public().Static()
-                            .WithParameters(new ParameterReference(typeof(MemoryStream), "stream"))
+                            .WithParameters(new ParameterReference(typeof(Stream), "stream"))
                             .DeclareVariable("type",
                                 new CastExpression(fieldedEnum.Name,
                                     new GetField(new TypeCall(fieldedEnum.SubType, "ReadFrom", stream), "Value")))
@@ -156,7 +156,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                     })
                     .AddMethod("void", "WriteTo",
                         write => write.Public()
-                            .WithParameters(new ParameterReference(typeof(MemoryStream), "stream"))
+                            .WithParameters(new ParameterReference(typeof(Stream), "stream"))
                             .Add(new Call(
                                 new CastExpression(fieldedEnum.SubType,
                                     new CastExpression("int", new Variable("Type"))), "WriteTo",
@@ -182,7 +182,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 {
                     var state = kvp.Key;
                     var delegates = kvp.Value;
-                    @class.AddField("Dictionary<int,Func<MemoryStream,IPacket>>", $"{state}ServerBoundPackets",
+                    @class.AddField("Dictionary<int,Func<Stream,IPacket>>", $"{state}ServerBoundPackets",
                         field =>
                         {
                             field.Public().Static();
@@ -366,7 +366,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     private MethodReference StartReadFrom(StructuredTypeReference ty, string className, bool isSubPacket = false)
     {
         ty.AddMethod(className, "ReadFrom", out var method);
-        return method.Public().Static().WithParameters(new ParameterReference(typeof(MemoryStream), "stream"))
+        return method.Public().Static().WithParameters(new ParameterReference(typeof(Stream), "stream"))
             .WithDocumentation(new DocCommentBuilder()
                 .WithSummary($"Reads a {className} {(isSubPacket ? "sub" : "")}packet from a memory stream\n")
                 .WithParameter("stream",
@@ -463,7 +463,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
             method.WithDocumentation(DocCommentBuilder.InheritDoc());
         }
 
-        return method.Public().WithParameters(new ParameterReference(typeof(MemoryStream), "stream"));
+        return method.Public().WithParameters(new ParameterReference(typeof(Stream), "stream"));
     }
 
     private void AddSimpleFieldWrite(MethodReference method, string fieldName, TypeReference targetType,

@@ -12,7 +12,7 @@ public partial interface IPacket
     /// Writes the packet to a memory stream (without ID/length)
     /// </summary>
     /// <param name="stream">The stream to write the packet to</param>
-    public void Write(MemoryStream stream);
+    public void Write(Stream stream);
    
     /// <summary>
     /// Returns the ID of this packet

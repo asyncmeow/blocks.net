@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
-using Blocks.Net.Nbt.Utilities;
+using Blocks.Net.Packets.Utilities;
+using StreamUtilities = Blocks.Net.Nbt.Utilities.StreamUtilities;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Byte(sbyte v)
+public readonly struct Byte(sbyte v) : IPrimitive
 {
     public sbyte Value => v;
     
@@ -19,8 +20,8 @@ public readonly struct Byte(sbyte v)
         stream.WriteByte((byte)v);
     }
 
-    public static Byte ReadFrom(MemoryStream stream)
+    public static Byte ReadFrom(Stream stream)
     {
-        return (sbyte)stream.CheckedReadByte();
+        return (sbyte)StreamUtilities.CheckedReadByte(stream);
     }
 }

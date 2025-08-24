@@ -1,6 +1,8 @@
-﻿namespace Blocks.Net.Packets.Primitives;
+﻿using Blocks.Net.Packets.Utilities;
 
-public struct Position(int x, int y, int z)
+namespace Blocks.Net.Packets.Primitives;
+
+public struct Position(int x, int y, int z) : IPrimitive
 {
     public int X => x;
     public int Y => y;
@@ -13,7 +15,7 @@ public struct Position(int x, int y, int z)
         posZ = Z;
     }
 
-    public static Position ReadFrom(MemoryStream stream)
+    public static Position ReadFrom(Stream stream)
     {
         var l = Long.ReadFrom(stream).Value;
         var x = l >> 38;
@@ -22,7 +24,7 @@ public struct Position(int x, int y, int z)
         return new Position((int)x, (int)y, (int)z);
     }
 
-    public void WriteTo(MemoryStream stream)
+    public void WriteTo(Stream stream)
     {
         Long l = ((x & 0x3FFFFFFL) << 38) | ((z & 0x3FFFFFFL) << 12) | (y & 0xFFFL);
         l.WriteTo(stream);

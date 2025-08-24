@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct UnsignedShort(ushort v)
+public readonly struct UnsignedShort(ushort v) : IPrimitive
 {
     public ushort Value => v;
 
@@ -22,7 +22,7 @@ public readonly struct UnsignedShort(ushort v)
         stream.WriteByte((byte)(Value & 0xff));
     }
 
-    public static UnsignedShort ReadFrom(MemoryStream stream)
+    public static UnsignedShort ReadFrom(Stream stream)
     {
         var hi = stream.CheckedReadByte();
         var lo = stream.CheckedReadByte();

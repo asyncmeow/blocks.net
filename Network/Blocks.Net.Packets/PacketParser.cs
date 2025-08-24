@@ -8,7 +8,7 @@ public static partial class PacketParser
 {
     // Will add a ParsePlay, ParseConfiguration, ParseHandshake, and ParseLogin for 
 
-    public static IPacket ParseHandshaking(MemoryStream stream)
+    public static IPacket ParseHandshaking(Stream stream)
     {
         _ = VarInt.ReadFrom(stream);
         var id = VarInt.ReadFrom(stream);
@@ -16,7 +16,7 @@ public static partial class PacketParser
         throw new Exception($"Unsupported Handshaking Packet ID: {id.Value}");
     }    
     
-    public static IPacket ParseStatus(MemoryStream stream)
+    public static IPacket ParseStatus(Stream stream)
     {
         _ = VarInt.ReadFrom(stream);
         var id = VarInt.ReadFrom(stream);
@@ -24,7 +24,7 @@ public static partial class PacketParser
         throw new Exception($"Unsupported Status Packet ID: {id.Value}");
     }
     
-    public static IPacket ParseLogin(MemoryStream stream)
+    public static IPacket ParseLogin(Stream stream)
     {
         _ = VarInt.ReadFrom(stream);
         var id = VarInt.ReadFrom(stream);
@@ -32,7 +32,7 @@ public static partial class PacketParser
         throw new Exception($"Unsupported Login Packet ID: {id.Value}");
     }
     
-    public static IPacket ParseConfiguration(MemoryStream stream)
+    public static IPacket ParseConfiguration(Stream stream)
     {
         _ = VarInt.ReadFrom(stream);
         var id = VarInt.ReadFrom(stream);

@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
 
-public readonly struct Long(long v)
+public readonly struct Long(long v) : IPrimitive
 {
     public long Value => v;
     
@@ -14,7 +15,7 @@ public readonly struct Long(long v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Long(long v) => new(v);
 
-    public static Long ReadFrom(MemoryStream stream)
+    public static Long ReadFrom(Stream stream)
     {
         var bytes = new byte[8];
         stream.ReadExactly(bytes);

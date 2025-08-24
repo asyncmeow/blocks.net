@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Float(float v)
+public readonly struct Float(float v) : IPrimitive
 {
     public float Value => v;
     
@@ -13,7 +14,7 @@ public readonly struct Float(float v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float(float v) => new(v);
 
-    public static Float ReadFrom(MemoryStream stream)
+    public static Float ReadFrom(Stream stream)
     {
         var bytes = new byte[4];
         stream.ReadExactly(bytes);

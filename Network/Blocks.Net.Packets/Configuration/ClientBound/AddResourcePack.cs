@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x07,true,"Configuration")]
+[Packet(0x09,true,"Configuration")]
 public partial class AddResourcePack : IPacket
 {
     [PacketField] public Uuid Uuid;

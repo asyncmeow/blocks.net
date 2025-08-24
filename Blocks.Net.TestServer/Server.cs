@@ -14,6 +14,7 @@ using Blocks.Net.Packets.Status.ServerBound;
 using Blocks.Net.Text;
 using Disconnect = Blocks.Net.Packets.Configuration.ClientBound.Disconnect;
 using System.Text.Json.Nodes;
+using Blocks.Net.Packets.SubPackets;
 
 namespace Blocks.Net.TestServer;
 
@@ -40,7 +41,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         // Handle legacy server list ping!
         if (State == ConnectionState.Handshake && length == 254)
         {
-            var kickString = "§1\0127\01.20.4\0Blocks.Net Test Server\00\01";
+            var kickString = "§1\0127\01.21.8\0Blocks.Net Test Server\00\01";
             var bytes = Encoding.BigEndianUnicode.GetBytes(kickString);
             stream.WriteByte(0xFF);
             stream.WriteByte((byte)(bytes.Length >> 8));
@@ -80,8 +81,8 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
             {
                 ["version"] = new JsonObject
                 {
-                    ["name"] = "1.20.4",
-                    ["protocol"] = 765,
+                    ["name"] = "1.21.8",
+                    ["protocol"] = 772,
                 },
                 ["players"] = new JsonObject
                 {
@@ -258,7 +259,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 {
                     PlayerUuid = loginStart.PlayerUuid,
                     Username = loginStart.Username,
-                    NumProperties = 0,
+                    NumPlayerProperties = 0,
                     PlayerProperties = []
                 });
                 break;

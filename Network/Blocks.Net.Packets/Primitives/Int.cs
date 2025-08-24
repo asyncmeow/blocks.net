@@ -1,9 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Int(int v)
+public readonly struct Int(int v) : IPrimitive
 {
     public int Value => v;
     
@@ -13,7 +14,7 @@ public readonly struct Int(int v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Int(int v) => new(v);
 
-    public static Int ReadFrom(MemoryStream stream)
+    public static Int ReadFrom(Stream stream)
     {
         var bytes = new byte[4];
         stream.ReadExactly(bytes);

@@ -1,6 +1,7 @@
 ﻿using Blocks.Net.Packets.Primitives;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
+using Byte = Blocks.Net.Packets.Primitives.Byte;
 
 namespace Blocks.Net.Packets.Login.ClientBound;
 
@@ -8,9 +9,8 @@ namespace Blocks.Net.Packets.Login.ClientBound;
 [Packet(0x01,true,"Login")]
 public partial class EncryptionRequest : IPacket
 {
-    [PacketField] public string ServerId;
-    [PacketField] public VarInt PublicKeyLength;
-    [PacketArrayField("PublicKeyLength")] public byte[] PublicKey;
+    [PacketField] public string ServerId; 
+    [PacketField] public PrefixedArray<Byte> PublicKey;
     [PacketField] public VarInt VerifyTokenLength;
-    [PacketArrayField("VerifyTokenLength")] public byte[] VerifyToken;
+    [PacketField] public PrefixedArray<Byte> VerifyToken;
 }

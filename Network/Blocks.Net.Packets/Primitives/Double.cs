@@ -1,8 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Packets.Utilities;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct Double(double v)
+public readonly struct Double(double v) : IPrimitive
 {
     public double Value => v;
     
@@ -12,7 +13,7 @@ public readonly struct Double(double v)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Double(double v) => new(v);
 
-    public static Double ReadFrom(MemoryStream stream)
+    public static Double ReadFrom(Stream stream)
     {
         var bytes = new byte[8];
         stream.ReadExactly(bytes);

@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
-public readonly struct String(string v)
+public readonly struct String(string v) : IPrimitive
 {
     public string Value => v;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,7 +22,7 @@ public readonly struct String(string v)
         stream.Write(bytes);
     }
 
-    public static String ReadFrom(MemoryStream stream)
+    public static String ReadFrom(Stream stream)
     {
         var length = (int)VarInt.ReadFrom(stream);
         using var reader = new BinaryReader(stream, Encoding.Unicode, true);

@@ -4,8 +4,8 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x04,true,"Configuration")]
-public partial class KeepAlive : IPacket
+[Packet(0x12, true, "Configuration")]
+public partial class ShowDialog : IPacket
 {
-    [PacketField] public long KeepAliveId;
+    [PacketField] public Primitives.Nbt Dialog;
 }

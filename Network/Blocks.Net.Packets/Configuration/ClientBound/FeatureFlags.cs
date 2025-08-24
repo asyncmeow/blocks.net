@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x08,true,"Configuration")]
+[Packet(0x0C,true,"Configuration")]
 public partial class FeatureFlags : IPacket
 {
     [PacketField] public VarInt TotalFeatures;

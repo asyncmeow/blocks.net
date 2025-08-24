@@ -5,9 +5,9 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x02,false,"Configuration")]
-public partial class PluginMessage : IPacket
+[Packet(0x08,false,"Configuration")]
+public partial class CustomClickAction : IPacket
 {
-    [PacketField] public Identifier Channel;
-    [PacketField] public LengthInferredByteArray Data;
+    [PacketField] public Identifier Id;
+    [PacketField] public Primitives.Nbt Payload;
 }
