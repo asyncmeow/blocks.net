@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 using Blocks.Net.Packets.Utilities;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
@@ -14,17 +15,17 @@ public readonly struct String(string v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator String(string v) => new(v);
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var length = (VarInt)v.Length;
-        length.WriteTo(stream);
+        length.WriteTo(stream, state);
         var bytes = Encoding.UTF8.GetBytes(v);
         stream.Write(bytes);
     }
 
-    public static String ReadFrom(Stream stream)
+    public static String ReadFrom(Stream stream, PacketState state)
     {
-        var length = (int)VarInt.ReadFrom(stream);
+        var length = (int)VarInt.ReadFrom(stream, state);
         using var reader = new BinaryReader(stream, Encoding.Unicode, true);
         var oldPosition = stream.Position;
         var readLength = Math.Min(3 * length, (int)(stream.Length - stream.Position));

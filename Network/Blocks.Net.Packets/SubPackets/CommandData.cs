@@ -41,8 +41,7 @@ public partial struct CommandData
         set => Flags = (byte)(value ? Flags | 0x10 : Flags & ~0x10);
     }
 
-    [PacketField] public VarInt ChildCount;
-    [PacketArrayField("ChildCount")] public VarInt[] Children;
+    [PacketField] public VarInt[] Children;
 
     [PacketOptionalField("(Flags & 0x08) != 0")]
     public VarInt RedirectNode;

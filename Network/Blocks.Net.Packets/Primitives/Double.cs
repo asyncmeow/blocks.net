@@ -13,7 +13,7 @@ public readonly struct Double(double v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Double(double v) => new(v);
 
-    public static Double ReadFrom(Stream stream)
+    public static Double ReadFrom(Stream stream, PacketState state)
     {
         var bytes = new byte[8];
         stream.ReadExactly(bytes);
@@ -24,7 +24,7 @@ public readonly struct Double(double v) : IPrimitive
         return BitConverter.ToDouble(bytes);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

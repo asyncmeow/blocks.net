@@ -1,9 +1,10 @@
-﻿using Blocks.Net.PacketSourceGenerator.Attributes;
+﻿using Blocks.Net.Packets.Primitives;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x12,true,"Play")]
+[Packet(0x10,true,"Play")]
 public partial class CloseContainer : IPacket
 {
-    [PacketField] public byte WindowId;
+    [PacketField] public VarInt WindowId;
 }

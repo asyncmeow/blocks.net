@@ -17,6 +17,7 @@ public class FieldReference(TypeReference typeReference, string fieldName) : IBu
     private bool _static;
     private bool _readonly;
     private bool _event;
+    private bool _const;
     
     public StringBuilder Build(StringBuilder builder, string indentation, int indentationLevel)
     {
@@ -38,6 +39,7 @@ public class FieldReference(TypeReference typeReference, string fieldName) : IBu
         if (_static) builder.Append("static ");
         if (_readonly) builder.Append("readonly ");
         if (_event) builder.Append("event ");
+        if (_const) builder.Append("const ");
         builder.Append(typeReference.Generate()).Append(' ').Append(fieldName);
         if (_default != null)
         {
@@ -92,6 +94,12 @@ public class FieldReference(TypeReference typeReference, string fieldName) : IBu
     public FieldReference Event()
     {
         _event = true;
+        return this;
+    }
+
+    public FieldReference Const()
+    {
+        _const = true;
         return this;
     }
 

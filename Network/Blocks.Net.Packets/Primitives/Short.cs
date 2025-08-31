@@ -15,14 +15,14 @@ public readonly struct Short(short v) : IPrimitive
     public static implicit operator Short(short v) => new(v);
 
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         // Write in big endian format!
         stream.WriteByte((byte)(Value >> 8));
         stream.WriteByte((byte)(Value & 0xff));
     }
 
-    public static Short ReadFrom(Stream stream)
+    public static Short ReadFrom(Stream stream, PacketState state)
     {
         var hi = StreamUtilities.CheckedReadByte(stream);
         var lo = StreamUtilities.CheckedReadByte(stream);

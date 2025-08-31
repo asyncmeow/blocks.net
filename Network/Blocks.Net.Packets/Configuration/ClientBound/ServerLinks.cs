@@ -9,6 +9,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x0F,true, "Configuration")]
 public partial class ServerLinks : IPacket
 {
-    [PacketField] public VarInt NumLinks;
-    [PacketArrayField("NumLinks")] public ServerLink[] Links;
+    [PacketField] public ServerLink[] Links;
 }

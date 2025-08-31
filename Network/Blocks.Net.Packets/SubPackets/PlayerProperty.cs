@@ -9,6 +9,5 @@ public partial struct PlayerProperty
 {
     [PacketField] public string Name;
     [PacketField] public string Value;
-    [PacketField] public bool Signed;
-    [PacketOptionalField("Signed")] public string Signature;
+    [PacketField] public string? Signature;
 }

@@ -5,9 +5,9 @@ namespace Blocks.Net.Packets.SubPackets;
 [SubPacket]
 public partial struct MerchantTrade
 {
-    [PacketField] public Slot InputItem1;
-    [PacketField] public Slot OuputItem;
-    [PacketField] public Slot InputItem2;
+    [PacketField] public Slots.Slot? InputItem1;
+    [PacketField] public Slots.Slot? OuputItem;
+    [PacketField] public Slots.Slot? InputItem2;
     [PacketField] public bool TradeDisabled;
     [PacketField] public int NumberOfTradeUses;
     [PacketField] public int MaximumNumberOfTradeUses;

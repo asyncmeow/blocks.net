@@ -15,7 +15,7 @@ public readonly struct Long(long v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Long(long v) => new(v);
 
-    public static Long ReadFrom(Stream stream)
+    public static Long ReadFrom(Stream stream, PacketState state)
     {
         var bytes = new byte[8];
         stream.ReadExactly(bytes);
@@ -26,7 +26,7 @@ public readonly struct Long(long v) : IPrimitive
         return BitConverter.ToInt64(bytes);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

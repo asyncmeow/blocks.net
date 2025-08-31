@@ -10,5 +10,5 @@ namespace Blocks.Net.Packets.Login.ServerBound;
 public partial class CookieResponse : IPacket
 {
     [PacketField] public Identifier Key;
-    [PacketField] public PrefixedOptional<PrefixedArray<Byte>> Payload;
+    [PacketField] public byte[]? Payload;
 }

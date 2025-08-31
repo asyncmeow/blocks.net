@@ -14,7 +14,7 @@ public readonly struct Uuid(Guid v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Uuid(Guid v) => new(v);
 
-    public static Uuid ReadFrom(Stream stream)
+    public static Uuid ReadFrom(Stream stream, PacketState state)
     {
         var bytes = new byte[16];
         stream.ReadExactly(bytes);
@@ -44,7 +44,7 @@ public readonly struct Uuid(Guid v) : IPrimitive
         return new Guid(bytes);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var bytes = v.ToByteArray();
         // Do some bit fanangling cuz guids are stored oddly (first 3 parts are stored LE, and last 2 parts BE)

@@ -1,11 +1,12 @@
-﻿using Blocks.Net.PacketSourceGenerator.Attributes;
+﻿using Blocks.Net.Packets.Primitives;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x0B,true,"Play")]
+[Packet(0x0A, true, "Play")]
 public partial class ChangeDifficulty : IPacket
 {
-    public enum DifficultyEnum : byte
+    public enum DifficultyEnum
     {
         Peaceful = 0,
         Easy = 1,
@@ -13,6 +14,7 @@ public partial class ChangeDifficulty : IPacket
         Hard = 3
     }
 
-    [PacketEnum(typeof(byte))] public DifficultyEnum Difficulty;
-    [PacketField] public bool Locked;
+    [PacketEnum(typeof(VarInt))] public DifficultyEnum Difficulty;
+
+    [PacketField] public bool DifficultyLocked;
 }

@@ -9,7 +9,5 @@ namespace Blocks.Net.Packets.Configuration.ServerBound;
 [Packet(0x07, false, "Configuration")]
 public partial class ServerBoundKnownPacks : IPacket
 {
-    
-    [PacketField] public VarInt NumPacks;
-    [PacketArrayField(nameof(NumPacks))] public KnownPacks[] Packs;
+    [PacketField] public KnownPacks[] Packs;
 }

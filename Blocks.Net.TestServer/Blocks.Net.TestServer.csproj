@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Blocks.Net.Framework\Blocks.Net.Framework.csproj" />
       <ProjectReference Include="..\Network\Blocks.Net.Packets\Blocks.Net.Packets.csproj" />
       <ProjectReference Include="..\Utilities\Blocks.Net.Nbt\Blocks.Net.Nbt.csproj" />
       <ProjectReference Include="..\Utilities\Blocks.Net.Text\Blocks.Net.Text.csproj" />

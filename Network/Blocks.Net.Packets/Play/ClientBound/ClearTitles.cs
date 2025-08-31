@@ -2,7 +2,7 @@
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x0F,true,"Play")]
+[Packet(0x0E,true,"Play")]
 public partial class ClearTitles : IPacket
 {
     [PacketField] public bool Reset;

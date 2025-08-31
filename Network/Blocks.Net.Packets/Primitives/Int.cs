@@ -14,7 +14,7 @@ public readonly struct Int(int v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Int(int v) => new(v);
 
-    public static Int ReadFrom(Stream stream)
+    public static Int ReadFrom(Stream stream, PacketState state)
     {
         var bytes = new byte[4];
         stream.ReadExactly(bytes);
@@ -25,7 +25,7 @@ public readonly struct Int(int v) : IPrimitive
         return BitConverter.ToInt32(bytes);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

@@ -7,6 +7,5 @@ namespace Blocks.Net.Packets.SubPackets;
 public partial struct Tag
 {
     [PacketField] public string TagName;
-    [PacketField] public VarInt Count;
-    [PacketArrayField("Count")] public VarInt[] Entries;
+    [PacketField] public VarInt[] Entries;
 }

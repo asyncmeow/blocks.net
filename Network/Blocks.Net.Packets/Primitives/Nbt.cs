@@ -16,9 +16,9 @@ public readonly struct Nbt(NbtTag v) : IPrimitive
     public static implicit operator Nbt(NbtTag v) => new(v);
 
 
-    public static Nbt ReadFrom(Stream stream) => NbtTag.Read(stream, false);
+    public static Nbt ReadFrom(Stream stream, PacketState state) => NbtTag.Read(stream, false);
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         v.Write(stream, false);
     }

@@ -8,6 +8,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x0C,true,"Configuration")]
 public partial class FeatureFlags : IPacket
 {
-    [PacketField] public VarInt TotalFeatures;
-    [PacketArrayField("TotalFeatures")] public string[] Flags;
+    [PacketField] public string[] Flags;
 }

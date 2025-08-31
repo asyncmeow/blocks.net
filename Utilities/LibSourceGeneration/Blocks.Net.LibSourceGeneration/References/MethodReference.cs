@@ -37,6 +37,7 @@ public class MethodReference(
     private bool _implicit = false;
     private bool _explicit = false;
     private bool _withoutBody = false;
+    private bool _partial = false;
     private StructureType _structureType = StructureType.Class;
     private DocCommentBuilder? _docCommentBuilder;
     private List<IBuildable> Children = [];
@@ -65,6 +66,7 @@ public class MethodReference(
 
         builder.AppendRepeating(indentation, indentationLevel).AppendVisibility(_visibility);
         if (_static) builder.Append("static ");
+        if (_partial) builder.Append("partial ");
         if (_abstract) builder.Append("abstract ");
         if (_override) builder.Append("override ");
         if (_virtual) builder.Append("virtual ");
@@ -121,6 +123,12 @@ public class MethodReference(
         return this;
     }
 
+    public MethodReference WithBaseCall(TypeReference? callType = null, params IExpression[] parameters)
+    {
+        _baseCalls.Add(new BaseCall(callType).WithConstructorParameters(parameters));
+        return this;
+    }
+    
     public MethodReference WithAttributes(params Attribute[] attributes)
     {
         _attributes.AddRange(attributes);
@@ -220,7 +228,12 @@ public class MethodReference(
         _explicit = true;
         return this;
     }
-
+    public MethodReference Partial()
+    {
+        _partial = true;
+        return this;
+    }
+    
     public MethodReference WithoutImplementation()
     {
         _withoutBody = true;

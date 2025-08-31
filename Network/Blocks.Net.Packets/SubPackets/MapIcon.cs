@@ -41,8 +41,5 @@ public partial struct MapIcon
     [PacketField] public sbyte X;
     [PacketField] public sbyte Z;
     [PacketField] public byte Direction;
-    [PacketField] public bool HasDisplayName;
-
-    [PacketOptionalField("HasDisplayName")]
-    public NbtTag DisplayName;
+    [PacketField] public NbtTag? DisplayName;
 }

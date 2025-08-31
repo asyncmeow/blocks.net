@@ -15,18 +15,18 @@ public struct Position(int x, int y, int z) : IPrimitive
         posZ = Z;
     }
 
-    public static Position ReadFrom(Stream stream)
+    public static Position ReadFrom(Stream stream, PacketState state)
     {
-        var l = Long.ReadFrom(stream).Value;
+        var l = Long.ReadFrom(stream, state).Value;
         var x = l >> 38;
         var y = l << 52 >> 52;
         var z = l << 26 >> 38;
         return new Position((int)x, (int)y, (int)z);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         Long l = ((x & 0x3FFFFFFL) << 38) | ((z & 0x3FFFFFFL) << 12) | (y & 0xFFFL);
-        l.WriteTo(stream);
+        l.WriteTo(stream,state);
     }
 }

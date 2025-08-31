@@ -16,7 +16,7 @@ public readonly struct VarLong(long v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator VarLong(long v) => new(v);
     
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var value = (ulong)v;
         while (true) {
@@ -30,7 +30,7 @@ public readonly struct VarLong(long v) : IPrimitive
     }
     
     
-    public static VarLong ReadFrom(Stream stream)
+    public static VarLong ReadFrom(Stream stream, PacketState state)
     {
         var value = 0UL;
         var position = 0;

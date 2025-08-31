@@ -1,4 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
+using Blocks.Net.DataTypes;
+using Blocks.Net.DataTypes;
 using Blocks.Net.Packets.Utilities;
 using JetBrains.Annotations;
 
@@ -18,7 +20,27 @@ public readonly struct VarInt(int v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator VarInt(int v) => new(v);
     
-    public void WriteTo(Stream stream)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator RegistryReference(VarInt v) => new(v.Value);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator VarInt(RegistryReference v) => new(v.RegistryId);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator BlockState(VarInt v) => new(v.Value);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator VarInt(BlockState v) => new(v.StateId);
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator ItemId(VarInt v) => new(v.Value);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator VarInt(ItemId v) => new(v.Id);
+
+    
+    public void WriteTo(Stream stream, PacketState state)
     {
         var value = (uint)v;
         while (true) {
@@ -33,7 +55,7 @@ public readonly struct VarInt(int v) : IPrimitive
     }
     
     
-    public static VarInt ReadFrom(Stream stream)
+    public static VarInt ReadFrom(Stream stream, PacketState state)
     {
         var value = 0u;
         var position = 0;

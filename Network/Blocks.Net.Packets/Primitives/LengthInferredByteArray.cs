@@ -16,7 +16,7 @@ public readonly struct LengthInferredByteArray(byte[] v) : IPrimitive
     public static implicit operator byte[](LengthInferredByteArray v) => v.Value;
 
 
-    public static LengthInferredByteArray ReadFrom(Stream stream)
+    public static LengthInferredByteArray ReadFrom(Stream stream, PacketState state)
     {
         var length = stream.Length - stream.Position;
         var data = new byte[length];
@@ -24,7 +24,7 @@ public readonly struct LengthInferredByteArray(byte[] v) : IPrimitive
         return data;
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         stream.Write(v);
     }

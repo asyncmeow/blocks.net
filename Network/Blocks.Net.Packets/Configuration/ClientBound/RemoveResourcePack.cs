@@ -8,6 +8,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x08,true,"Configuration")]
 public partial class RemoveResourcePack : IPacket
 {
-    [PacketField] public bool HasUuid;
-    [PacketOptionalField("HasUuid")] public Uuid Uuid;
+    [PacketField] public Uuid? Uuid;
 }

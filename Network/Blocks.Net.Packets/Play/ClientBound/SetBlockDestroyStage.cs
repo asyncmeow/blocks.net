@@ -3,7 +3,8 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x06,true,"Play")]
+
+[Packet(0x06, true, "Play")]
 public partial class SetBlockDestroyStage : IPacket
 {
     [PacketField] public VarInt EntityId;

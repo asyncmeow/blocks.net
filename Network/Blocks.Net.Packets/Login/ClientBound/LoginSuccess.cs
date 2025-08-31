@@ -11,6 +11,5 @@ public partial class LoginSuccess : IPacket
 {
     [PacketField] public Uuid PlayerUuid;
     [PacketField] public string Username;
-    [PacketField] public VarInt NumPlayerProperties;
-    [PacketArrayField(nameof(NumPlayerProperties))] public PlayerProperty[] PlayerProperties;
+    [PacketField] public PlayerProperty[] PlayerProperties;
 }

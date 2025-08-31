@@ -10,6 +10,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x0E, true, "Configuration")]
 public partial class ClientBoundKnownPacks : IPacket
 {
-    [PacketField] public VarInt NumPacks;
-    [PacketArrayField(nameof(NumPacks))] public KnownPacks[] Packs;
+    [PacketField] public KnownPacks[] Packs;
 }

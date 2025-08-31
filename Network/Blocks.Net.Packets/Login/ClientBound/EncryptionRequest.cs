@@ -9,8 +9,7 @@ namespace Blocks.Net.Packets.Login.ClientBound;
 [Packet(0x01,true,"Login")]
 public partial class EncryptionRequest : IPacket
 {
-    [PacketField] public string ServerId; 
-    [PacketField] public PrefixedArray<Byte> PublicKey;
-    [PacketField] public VarInt VerifyTokenLength;
-    [PacketField] public PrefixedArray<Byte> VerifyToken;
+    [PacketField] public string ServerId;
+    [PacketField] public byte[] PublicKey;
+    [PacketField] public byte[] VerifyToken;
 }

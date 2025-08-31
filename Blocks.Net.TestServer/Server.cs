@@ -14,12 +14,18 @@ using Blocks.Net.Packets.Status.ServerBound;
 using Blocks.Net.Text;
 using Disconnect = Blocks.Net.Packets.Configuration.ClientBound.Disconnect;
 using System.Text.Json.Nodes;
+using Blocks.Net.Framework;
 using Blocks.Net.Packets.SubPackets;
 
 namespace Blocks.Net.TestServer;
 
 public class Server(IPAddress address, TextComponent motd, TextComponent kickReason, ushort port = 25565)
 {
+    public PacketState CurrentState = new PacketState
+    {
+        DimensionSize = 8,
+        BiomeMinBitsPerEntry = 6
+    };
     public enum ConnectionState
     {
         Handshake,
@@ -34,9 +40,9 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public DateTime ConfigStateEnteredAt;
 
-    private MemoryStream ReadMessage(Stream stream)
+    private MemoryStream ReadMessage(Stream stream, PacketState state)
     {
-        var length = VarInt.ReadFrom(stream);
+        var length = VarInt.ReadFrom(stream, state);
         
         // Handle legacy server list ping!
         if (State == ConnectionState.Handshake && length == 254)
@@ -51,7 +57,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         }
 
         var result = new MemoryStream();
-        length.WriteTo(result);
+        length.WriteTo(result, state);
         int lengthInt = length;
         var buffer = new byte[lengthInt];
         var sum = 0;
@@ -115,7 +121,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
         //
         // memStream.Seek(0, SeekOrigin.Begin);
         // memStream.CopyTo(CurrentStream);
-        packet.WriteToStream(CurrentStream);
+        packet.WriteToStream(CurrentStream, CurrentState);
     }
 
     public void Run()
@@ -147,14 +153,14 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                             ((IPacket)new Disconnect
                             {
                                 Reason = kickReason.ToNbt()
-                            }).WriteToStream(stream);
+                            }).WriteToStream(stream, CurrentState);
                             break;
                         }
 
                         continue;
                     }
 
-                    using var message = ReadMessage(stream);
+                    using var message = ReadMessage(stream, CurrentState);
                     switch (State)
                     {
                         case ConnectionState.Handshake:
@@ -200,7 +206,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleHandshakeMessage(MemoryStream message)
     {
-        var packet = PacketParser.ParseHandshaking(message);
+        var packet = PacketParser.ParseHandshaking(message, CurrentState);
         if (packet is Handshake handshake)
         {
             Console.WriteLine(
@@ -221,7 +227,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public bool HandleStatusMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseStatus(message);
+        var packet = PacketParser.ParseStatus(message, CurrentState);
         switch (packet)
         {
             case StatusRequest statusRequest:
@@ -248,7 +254,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleLoginMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseLogin(message);
+        var packet = PacketParser.ParseLogin(message, CurrentState);
         switch (packet)
         {
             case LoginStart loginStart:
@@ -259,7 +265,6 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 {
                     PlayerUuid = loginStart.PlayerUuid,
                     Username = loginStart.Username,
-                    NumPlayerProperties = 0,
                     PlayerProperties = []
                 });
                 break;
@@ -276,7 +281,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleConfigurationMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseConfiguration(message);
+        var packet = PacketParser.ParseConfiguration(message, CurrentState);
         switch (packet)
         {
             case PluginMessage pluginMessage:
@@ -287,7 +292,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 switch (pluginMessage.Channel)
                 {
                     case "minecraft:brand":
-                        Console.WriteLine($"Client Brand: {Packets.Primitives.String.ReadFrom(channelStream).Value}");
+                        Console.WriteLine($"Client Brand: {Packets.Primitives.String.ReadFrom(channelStream, CurrentState).Value}");
                         break;
                     default:
                         Console.WriteLine("Unsupported channel");
@@ -307,7 +312,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
             {
                 using var channelStream = new MemoryStream();
                 Packets.Primitives.String brand = "blocks.net";
-                brand.WriteTo(channelStream);
+                brand.WriteTo(channelStream, CurrentState);
                 WritePacket(new Blocks.Net.Packets.Configuration.ClientBound.PluginMessage
                 {
                     Channel = "minecraft:brand",
@@ -320,4 +325,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 break;
         }
     }
+    
+
+    // Eventually we want a client in a white concrete void
 }

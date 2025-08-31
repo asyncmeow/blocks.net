@@ -7,7 +7,5 @@ namespace Blocks.Net.Packets.SubPackets.Configuration;
 public partial struct TagsRegistry
 {
     [PacketField] public string Registry;
-    [PacketField] public VarInt Length;
-    [PacketArrayField("Length")] public Tag[] Tags;
-
+    [PacketField] public Tag[] Tags;
 }

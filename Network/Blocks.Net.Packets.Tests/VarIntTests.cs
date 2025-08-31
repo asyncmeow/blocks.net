@@ -24,9 +24,9 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = x;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         stream.Seek(0, SeekOrigin.Begin);
-        var z = VarInt.ReadFrom(stream);
+        var z = VarInt.ReadFrom(stream, null);
         if (z != x)
         {
             throw new Exception($"Round trip failed, got {z.Value} expected {x}");
@@ -48,7 +48,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = x;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array.Length == 1 && array[0] == x) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -65,7 +65,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = 128;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0x80, 0x01]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -76,7 +76,7 @@ public class VarIntTests
     public void WikiTest_128_Read()
     {
         using var stream = new MemoryStream([0x80, 0x01],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == 128) return;
         throw new Exception($"128 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -86,7 +86,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = 255;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0xff, 0x01]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -97,7 +97,7 @@ public class VarIntTests
     public void WikiTest_255_Read()
     {
         using var stream = new MemoryStream([0xff, 0x01],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == 255) return;
         throw new Exception($"255 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -107,7 +107,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = 25565;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0xdd, 0xc7, 0x01]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -118,7 +118,7 @@ public class VarIntTests
     public void WikiTest_25565_Read()
     {
         using var stream = new MemoryStream([0xdd, 0xc7, 0x01],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == 25565) return;
         throw new Exception($"25565 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -128,7 +128,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = 2097151;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0xff, 0xff, 0x7f]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -139,7 +139,7 @@ public class VarIntTests
     public void WikiTest_2097151_Read()
     {
         using var stream = new MemoryStream([0xff, 0xff, 0x7f],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == 2097151) return;
         throw new Exception($"2097151 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -150,7 +150,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = 2147483647;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0xff, 0xff, 0xff, 0xff, 0x07]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -161,7 +161,7 @@ public class VarIntTests
     public void WikiTest_2147483647_Read()
     {
         using var stream = new MemoryStream([0xff, 0xff, 0xff, 0xff, 0x07],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == 2147483647) return;
         throw new Exception($"2147483647 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -171,7 +171,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = -1;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0xff, 0xff, 0xff, 0xff, 0x0F]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -182,7 +182,7 @@ public class VarIntTests
     public void WikiTest_Negative_1_Read()
     {
         using var stream = new MemoryStream([0xff, 0xff, 0xff, 0xff, 0x0F],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == -1) return;
         throw new Exception($"-1 was not decoded correctly, it was decoded as {y.Value}");
     }
@@ -192,7 +192,7 @@ public class VarIntTests
     {
         using var stream = new MemoryStream();
         VarInt y = -2147483648;
-        y.WriteTo(stream);
+        y.WriteTo(stream, null);
         var array = stream.ToArray();
         if (array is [0x80, 0x80, 0x80, 0x80, 0x08]) return;
         var current = string.Join(", ", array.Select(z => $"0x{z:X2}"));
@@ -203,7 +203,7 @@ public class VarIntTests
     public void WikiTest_Negative_2147483648_Read()
     {
         using var stream = new MemoryStream([0x80, 0x80, 0x80, 0x80, 0x08],false);
-        var y = VarInt.ReadFrom(stream);
+        var y = VarInt.ReadFrom(stream, null);
         if (y == -2147483648) return;
         throw new Exception($"-2147483648 was not decoded correctly, it was decoded as {y.Value}");
     }

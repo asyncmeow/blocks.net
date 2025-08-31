@@ -1,13 +1,14 @@
-﻿using Blocks.Net.Nbt;
+﻿using Blocks.Net.DataTypes;
+using Blocks.Net.Nbt;
 using Blocks.Net.Packets.Primitives;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x07,true,"Play")]
+[Packet(0x06,true,"Play")]
 public partial class BlockEntityData : IPacket
 {
     [PacketField] public Position Location;
-    [PacketField] public VarInt Type;
-    [PacketField] public NbtTag Data;
+    [PacketField] public RegistryReference Type;
+    [PacketField] public NbtTag Nbt;
 }

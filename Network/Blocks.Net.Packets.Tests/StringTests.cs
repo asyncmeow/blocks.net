@@ -11,9 +11,9 @@ public class StringTests
     {
         using var stream = new MemoryStream();
         Primitives.String x = value;
-        x.WriteTo(stream);
+        x.WriteTo(stream, null);
         stream.Seek(0, SeekOrigin.Begin);
-        var result = Primitives.String.ReadFrom(stream);
+        var result = Primitives.String.ReadFrom(stream, null);
         if (result == value) return;
         throw new Exception($"Failed round trip for {value}, got {result.Value}");
     }
@@ -26,7 +26,7 @@ public class StringTests
         var expected = (string)value.Last();
         // Console.WriteLine(value.Last());
         using var stream = new MemoryStream(data,false);
-        var x = Primitives.String.ReadFrom(stream);
+        var x = Primitives.String.ReadFrom(stream, null);
         if (x.Value == expected) return;
         throw new Exception($"Failed to parse string {expected} got {x}");
     }

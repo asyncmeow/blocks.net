@@ -9,8 +9,6 @@ namespace Blocks.Net.Packets.Login.ServerBound;
 [Packet(0x01,false,"Login")]
 public partial class EncryptionResponse : IPacket
 {
-    [PacketField] public VarInt SharedSecretLength;
-    [PacketArrayField("SharedSecretLength")] public byte[] SharedSecret;
-    [PacketField] public VarInt VerifyTokenLength;
-    [PacketArrayField("VerifyTokenLength")] public byte[] VerifyToken;
+    [PacketField] public byte[] SharedSecret;
+    [PacketField] public byte[] VerifyToken;
 }

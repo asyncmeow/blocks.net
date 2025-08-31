@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsTrimmable>true</IsTrimmable>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Blocks.Net.DataTypes\Blocks.Net.DataTypes.csproj" />
+      <ProjectReference Include="..\Blocks.Net.VanillaSourceGenerator\Blocks.Net.VanillaSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="blocks.json" />
+      <AdditionalFiles Include="blocks.json" />
+      <None Remove="registries.json" />
+      <AdditionalFiles Include="registries.json" />
+    </ItemGroup>
+
+</Project>

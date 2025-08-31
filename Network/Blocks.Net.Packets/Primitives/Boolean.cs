@@ -15,7 +15,7 @@ public readonly struct Boolean(bool v) : IPrimitive
     public static implicit operator Boolean(bool v) => new(v);
 
 
-    public void WriteTo(Stream stream) => stream.WriteByte((byte)(v ? 1 : 0));
+    public void WriteTo(Stream stream, PacketState state) => stream.WriteByte((byte)(v ? 1 : 0));
 
-    public static Boolean ReadFrom(Stream stream) => stream.CheckedReadByte() == 1;
+    public static Boolean ReadFrom(Stream stream, PacketState state) => stream.CheckedReadByte() == 1;
 }

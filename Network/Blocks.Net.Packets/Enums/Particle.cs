@@ -2,6 +2,7 @@
 using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
+using Slot = Blocks.Net.Packets.SubPackets.Slots.Slot;
 
 namespace Blocks.Net.Packets.Enums;
 
@@ -157,7 +158,7 @@ public partial class ParticleSculkCharge
 [EnumField(typeof(Particle))]
 public partial class ParticleItem
 {
-    [PacketField] public Slot Item;
+    [PacketField] public Slot? Item;
 }
 
 [EnumField(typeof(Particle))]

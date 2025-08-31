@@ -15,14 +15,14 @@ public readonly struct UnsignedShort(ushort v) : IPrimitive
     public static implicit operator UnsignedShort(ushort v) => new(v);
 
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         // Write in big endian format!
         stream.WriteByte((byte)(Value >> 8));
         stream.WriteByte((byte)(Value & 0xff));
     }
 
-    public static UnsignedShort ReadFrom(Stream stream)
+    public static UnsignedShort ReadFrom(Stream stream, PacketState state)
     {
         var hi = stream.CheckedReadByte();
         var lo = stream.CheckedReadByte();

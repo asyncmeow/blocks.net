@@ -10,5 +10,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 public partial class StoreCookie : IPacket
 {
     [PacketField] public Identifier Key;
-    [PacketField] public PrefixedArray<Byte> Payload;
+    [PacketField] public byte[] Payload;
 }

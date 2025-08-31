@@ -6,7 +6,7 @@
 ///
 /// When using the extra args, the args are named _0, _1, _2, ...
 /// </summary>
-[AttributeUsage(AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
 public class SubPacket(params Type[] extraArgs) : Attribute
 {
     public IEnumerable<Type> ExtraArgs => extraArgs;

@@ -7,6 +7,5 @@ namespace Blocks.Net.Packets.SubPackets;
 public partial struct SuggestionMatch
 {
     [PacketField] public string Match;
-    [PacketField] public bool HasTooltip;
-    [PacketOptionalField("HasTooltip")] public NbtTag Tooltip;
+    [PacketField] public NbtTag? Tooltip;
 }

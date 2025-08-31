@@ -15,12 +15,12 @@ public readonly struct Byte(sbyte v) : IPrimitive
     public static implicit operator Byte(sbyte v) => new(v);
 
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         stream.WriteByte((byte)v);
     }
 
-    public static Byte ReadFrom(Stream stream)
+    public static Byte ReadFrom(Stream stream, PacketState state)
     {
         return (sbyte)StreamUtilities.CheckedReadByte(stream);
     }

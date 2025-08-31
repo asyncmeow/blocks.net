@@ -15,12 +15,12 @@ public readonly struct UnsignedByte(byte v) : IPrimitive
     public static implicit operator UnsignedByte(byte v) => new(v);
 
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         stream.WriteByte(v);
     }
 
-    public static UnsignedByte ReadFrom(Stream stream)
+    public static UnsignedByte ReadFrom(Stream stream, PacketState state)
     {
         return stream.CheckedReadByte();
     }

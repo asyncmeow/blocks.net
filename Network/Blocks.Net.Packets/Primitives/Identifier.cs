@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Blocks.Net.DataTypes;
 using Blocks.Net.Packets.Utilities;
 
 namespace Blocks.Net.Packets.Primitives;
@@ -20,15 +21,18 @@ public struct Identifier(string ns, string name) : IPrimitive
         if (parts.Length == 1) return new("minecraft", parts[0]);
         return new(parts[0], parts[1]);
     }
-
-    public void WriteTo(Stream stream)
+    
+    public static implicit operator Identifier(NamespacedIdentifier v) =>new(v.Namespace, v.Name);
+    public static implicit operator NamespacedIdentifier(Identifier v) => new(v.Namespace, v.Name);
+    
+    public void WriteTo(Stream stream, PacketState state)
     {
-        ((String)Value).WriteTo(stream);
+        ((String)Value).WriteTo(stream, state);
     }
 
-    public static Identifier ReadFrom(Stream stream)
+    public static Identifier ReadFrom(Stream stream, PacketState state)
     {
-        var length = (int)VarInt.ReadFrom(stream);
+        var length = (int)VarInt.ReadFrom(stream, state);
         using var reader = new BinaryReader(stream, Encoding.Unicode, true);
         var oldPosition = stream.Position;
         var readLength = Math.Min(3 * length, (int)(stream.Length - stream.Position));

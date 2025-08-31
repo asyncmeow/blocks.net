@@ -1,12 +1,10 @@
-﻿using Blocks.Net.Packets.Primitives;
-using Blocks.Net.Packets.SubPackets;
+﻿using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x04,true,"Play")]
-public partial class AwardStatistics : IPacket
+[Packet(0x03, true, "Play")]
+public partial class AwardStatistics
 {
-    [PacketField] public VarInt Count;
-    [PacketArrayField("Count")] public Statistic[] Statistics;
+    [PacketField] public Statistic[] Statistics;
 }

@@ -13,6 +13,5 @@ public partial class AddResourcePack : IPacket
     [PacketField] public string Url;
     [PacketField] public string Hash;
     [PacketField] public bool Forced;
-    [PacketField] public bool HasPromptMessage;
-    [PacketOptionalField("HasPromptMessage")] public NbtTag PromptMessage;
+    [PacketField] public NbtTag? PromptMessage;
 }

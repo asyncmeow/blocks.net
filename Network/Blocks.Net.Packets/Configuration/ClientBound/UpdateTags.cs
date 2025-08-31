@@ -10,6 +10,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x0D,true,"Configuration")]
 public partial class UpdateTags : IPacket
 {
-    [PacketField] public VarInt TagsCount;
-    [PacketArrayField("TagsCount")] public TagsRegistry[] Registries;
+    [PacketField] public TagsRegistry[] Registries;
 }

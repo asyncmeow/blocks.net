@@ -12,7 +12,7 @@ public readonly struct Angle(byte fractionalTurns) : IPrimitive
     public static explicit operator double(Angle angle) => angle.Degrees;
     public static explicit operator Angle(double d) => new((byte)(d * 256d / 360d));
 
-    public static Angle ReadFrom(Stream stream) => (byte)UnsignedByte.ReadFrom(stream);
+    public static Angle ReadFrom(Stream stream, PacketState state) => (byte)UnsignedByte.ReadFrom(stream, state);
 
-    public void WriteTo(Stream stream) => new UnsignedByte(fractionalTurns).WriteTo(stream);
+    public void WriteTo(Stream stream, PacketState state) => new UnsignedByte(fractionalTurns).WriteTo(stream, state);
 }

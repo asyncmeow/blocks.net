@@ -14,7 +14,7 @@ public readonly struct Float(float v) : IPrimitive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float(float v) => new(v);
 
-    public static Float ReadFrom(Stream stream)
+    public static Float ReadFrom(Stream stream, PacketState state)
     {
         var bytes = new byte[4];
         stream.ReadExactly(bytes);
@@ -25,7 +25,7 @@ public readonly struct Float(float v) : IPrimitive
         return BitConverter.ToSingle(bytes);
     }
 
-    public void WriteTo(Stream stream)
+    public void WriteTo(Stream stream, PacketState state)
     {
         var bytes = BitConverter.GetBytes(v);
         if (BitConverter.IsLittleEndian)

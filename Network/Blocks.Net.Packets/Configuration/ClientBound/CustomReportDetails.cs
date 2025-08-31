@@ -10,6 +10,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet(0x0F, true, "Configuration")]
 public partial class CustomReportDetails : IPacket
 {
-    [PacketField] public VarInt NumDetails;
-    [PacketArrayField(nameof(NumDetails))] public ReportDetails[] Details;
+    [PacketField] public ReportDetails[] Details;
 }
