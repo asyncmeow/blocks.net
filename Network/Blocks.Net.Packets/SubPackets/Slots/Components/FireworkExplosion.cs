@@ -1,4 +1,5 @@
-﻿using Blocks.Net.PacketSourceGenerator.Attributes;
+﻿using Blocks.Net.Packets.Primitives;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.SubPackets.Slots.Components;
 
@@ -15,7 +16,7 @@ public partial struct FireworkExplosion
         Burst
     }
 
-    [PacketField] public ExplosionShape Shape;
+    [PacketEnum(typeof(VarInt))] public ExplosionShape Shape;
     [PacketField] public int[] Colors;
     [PacketField] public int[] FadeColors;
     [PacketField] public bool HasTrail;

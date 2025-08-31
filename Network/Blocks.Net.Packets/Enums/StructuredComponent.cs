@@ -259,7 +259,7 @@ public partial class StructuredComponentConsumable
     [PacketField] public float ConsumeSeconds;
     [PacketField] public IdOrSoundEvent Sound;
     [PacketField] public bool HasConsumeParticles;
-    [PacketField] public ConsumeEffect[] Effects;
+    [PacketField] public ConsumeEffectImpl[] Effects;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -342,7 +342,7 @@ public partial class StructuredComponentTooltipStyle
 [EnumField(typeof(StructuredComponent))]
 public partial class StructuredComponentDeathProtection
 {
-    [PacketField] public ConsumeEffect[] Effects;
+    [PacketField] public ConsumeEffectImpl[] Effects;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -350,7 +350,7 @@ public partial class StructuredComponentBlocksAttacks
 {
     [PacketField] public float BlockDelaySeconds;
     [PacketField] public float DisableCooldownScale;
-    [PacketField] public DamageReduction[] DamageReduction;
+    [PacketField] public DamageReduction[] DamageReductions;
     [PacketField] public float ItemDamageThreshold;
     [PacketField] public float ItemDamageFactor;
     [PacketField] public Identifier? BypassedBy;
@@ -657,7 +657,7 @@ public partial class StructuredComponentFoxVariant
         Snow
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -670,7 +670,7 @@ public partial class StructuredComponentSalmonSize
         Large
     }
 
-    [PacketField] public Sizes Size;
+    [PacketEnum(typeof(VarInt))] public Sizes Size;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -698,7 +698,7 @@ public partial class StructuredComponentTropicalFishPattern
         Clayfish
     }
 
-    [PacketField] public Patterns Pattern;
+    [PacketEnum(typeof(VarInt))] public Patterns Pattern;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -722,7 +722,7 @@ public partial class StructuredComponentMooshroomVariant
         Brown
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -739,7 +739,7 @@ public partial class StructuredComponentRabbitVariant
         Evil
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -787,7 +787,7 @@ public partial class StructuredComponentHorseVariant
         DarkBrown
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 [EnumField(typeof(StructuredComponent))]
@@ -807,7 +807,7 @@ public partial class StructuredComponentLlamaVariant
         Gray
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 
@@ -823,7 +823,7 @@ public partial class StructuredComponentAxolotlVariant
         Blue
     }
 
-    [PacketField] public Variants Variant;
+    [PacketEnum(typeof(VarInt))] public Variants Variant;
 }
 
 
