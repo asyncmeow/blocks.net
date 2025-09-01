@@ -4,7 +4,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x09, true, "Play")]
+[Packet("boss_event", true, "Play")]
 public partial class BossBar : IPacket
 {
     [PacketField] public Uuid Uuid;

@@ -1,9 +1,9 @@
 ﻿using Blocks.Net.PacketSourceGenerator.Attributes;
 
-namespace Blocks.Net.Packets.SubPackets;
+namespace Blocks.Net.Packets.Primitives;
 
 [SubPacket]
-public partial struct PositionVector
+public partial struct Double3
 {
     [PacketField] public double X;
     [PacketField] public double Y;

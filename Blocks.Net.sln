@@ -4,10 +4,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Network", "Network", "{58C5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.PacketSourceGenerator", "Network\Blocks.Net.PacketSourceGenerator\Blocks.Net.PacketSourceGenerator.csproj", "{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.PacketSourceGenerator.Sample", "Network\Blocks.Net.PacketSourceGenerator.Sample\Blocks.Net.PacketSourceGenerator.Sample.csproj", "{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.PacketSourceGenerator.Tests", "Network\Blocks.Net.PacketSourceGenerator.Tests\Blocks.Net.PacketSourceGenerator.Tests.csproj", "{494551F9-C91B-4560-896B-556FCD2571CD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets", "Network\Blocks.Net.Packets\Blocks.Net.Packets.csproj", "{61D17FE7-9124-41E5-A52A-E4B2152AE405}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Packets.Tests", "Network\Blocks.Net.Packets.Tests\Blocks.Net.Packets.Tests.csproj", "{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1}"
@@ -43,8 +39,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
-		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
-		{494551F9-C91B-4560-896B-556FCD2571CD} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{8A2090F0-76CF-4A5E-94AA-BDA74F3389E1} = {58C519E6-D0AD-4DD1-ACF6-07A9B2B2D82D}
 		{1A6FF377-78C6-4A03-8C4E-360FC2DE0B6F} = {79B9C372-1D19-4626-96B8-8455CF1F4F8B}
@@ -60,14 +54,6 @@ Global
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09B8B96E-9EF9-4D96-9CF8-DF116FF0E90F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5EE8765-F2BE-4DE8-8DCC-E63544EF34CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{494551F9-C91B-4560-896B-556FCD2571CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{494551F9-C91B-4560-896B-556FCD2571CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{494551F9-C91B-4560-896B-556FCD2571CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{494551F9-C91B-4560-896B-556FCD2571CD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61D17FE7-9124-41E5-A52A-E4B2152AE405}.Release|Any CPU.ActiveCfg = Release|Any CPU

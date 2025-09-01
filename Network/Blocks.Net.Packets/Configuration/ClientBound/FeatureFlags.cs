@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0C,true,"Configuration")]
+[Packet("update_enabled_features",true,"Configuration")]
 public partial class FeatureFlags : IPacket
 {
     [PacketField] public string[] Flags;

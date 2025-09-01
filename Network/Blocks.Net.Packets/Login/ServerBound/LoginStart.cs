@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ServerBound;
 
 [PublicAPI]
-[Packet(0x00,false,"Login")]
+[Packet("hello",false,"Login")]
 public partial class LoginStart : IPacket
 {
     [PacketField] public string Username;

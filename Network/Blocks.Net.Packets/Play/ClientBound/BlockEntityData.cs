@@ -5,7 +5,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x06,true,"Play")]
+[Packet("block_entity_data",true,"Play")]
 public partial class BlockEntityData : IPacket
 {
     [PacketField] public Position Location;

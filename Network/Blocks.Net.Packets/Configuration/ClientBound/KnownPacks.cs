@@ -7,8 +7,8 @@ using KnownPacks = Blocks.Net.Packets.SubPackets.Configuration.KnownPacks;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0E, true, "Configuration")]
-public partial class ClientBoundKnownPacks : IPacket
+[Packet("select_known_packs", true, "Configuration")]
+public partial class KnownPacks : IPacket
 {
-    [PacketField] public KnownPacks[] Packs;
+    [PacketField] public SubPackets.Configuration.KnownPacks[] Packs;
 }

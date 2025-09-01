@@ -4,7 +4,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x07,true,"Play")]
+[Packet("block_event",true,"Play")]
 public partial class BlockAction : IPacket
 {
     [PacketField] public Position Location;

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Status.ServerBound;
 
 [PublicAPI]
-[Packet(0x01,false,"Status")]
+[Packet("ping_request",false,"Status")]
 public partial class PingRequest : IPacket
 {
     [PacketField] public long Payload;

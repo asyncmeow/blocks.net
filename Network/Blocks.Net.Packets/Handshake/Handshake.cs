@@ -3,7 +3,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Handshake;
 
-[Packet(0x00,false,"Handshaking")]
+[Packet("intention",false,"Handshake")]
 public partial class Handshake : IPacket
 {
     public enum NextStateEnum

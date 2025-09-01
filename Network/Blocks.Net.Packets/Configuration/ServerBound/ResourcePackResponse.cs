@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x06,false,"Configuration")]
+[Packet("resource_pack",false,"Configuration")]
 public partial class ResourcePackResponse : IPacket
 {
     public enum ResultEnum

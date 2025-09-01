@@ -1,7 +1,6 @@
-﻿using Blocks.Net.Packets.Primitives;
-using Blocks.Net.PacketSourceGenerator.Attributes;
+﻿using Blocks.Net.PacketSourceGenerator.Attributes;
 
-namespace Blocks.Net.Packets.SubPackets;
+namespace Blocks.Net.Packets.SubPackets.Chunks;
 
 [SubPacket]
 public partial struct ChunkBiomeData

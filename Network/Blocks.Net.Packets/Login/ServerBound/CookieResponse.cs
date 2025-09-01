@@ -6,7 +6,7 @@ using Byte = Blocks.Net.Packets.Primitives.Byte;
 namespace Blocks.Net.Packets.Login.ServerBound;
 
 [PublicAPI]
-[Packet(0x04,false,"Login")]
+[Packet("cookie_response",false,"Login")]
 public partial class CookieResponse : IPacket
 {
     [PacketField] public Identifier Key;

@@ -3,7 +3,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x13,true,"Play")]
+[Packet("container_set_data",true,"Play")]
 public partial class SetContainerProperty : IPacket
 {
     [PacketField] public VarInt WindowId;

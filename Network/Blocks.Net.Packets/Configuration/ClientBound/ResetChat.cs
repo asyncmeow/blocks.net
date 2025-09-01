@@ -4,5 +4,5 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x06, true, "Configuration")]
+[Packet("reset_chat",true, "Configuration")]
 public partial class ResetChat : IPacket;

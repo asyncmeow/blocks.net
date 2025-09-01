@@ -3,7 +3,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x0A, true, "Play")]
+[Packet("change_difficulty", true, "Play")]
 public partial class ChangeDifficulty : IPacket
 {
     public enum DifficultyEnum

@@ -7,7 +7,7 @@ using ReportDetails = Blocks.Net.Packets.SubPackets.Configuration.ReportDetails;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0F, true, "Configuration")]
+[Packet("custom_report_details", true, "Configuration")]
 public partial class CustomReportDetails : IPacket
 {
     [PacketField] public ReportDetails[] Details;

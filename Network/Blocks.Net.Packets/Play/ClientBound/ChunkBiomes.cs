@@ -1,5 +1,6 @@
 ﻿using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
+using ChunkBiomeData = Blocks.Net.Packets.SubPackets.Chunks.ChunkBiomeData;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
@@ -9,7 +10,7 @@ namespace Blocks.Net.Packets.Play.ClientBound;
 // And then add "RequiresState" attributes?
 // Yeah, I think that should work
 
-[Packet(0x0D, true, "Play")]
+[Packet("chunks_biomes", true, "Play")]
 public partial class ChunkBiomes : IPacket
 {
     [PacketField]

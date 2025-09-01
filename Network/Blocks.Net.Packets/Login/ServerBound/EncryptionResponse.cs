@@ -6,7 +6,7 @@ namespace Blocks.Net.Packets.Login.ServerBound;
 
 
 [PublicAPI]
-[Packet(0x01,false,"Login")]
+[Packet("key",false,"Login")]
 public partial class EncryptionResponse : IPacket
 {
     [PacketField] public byte[] SharedSecret;

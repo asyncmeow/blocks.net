@@ -3,7 +3,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x02, true, "Play")]
+[Packet("animate", true, "Play")]
 public partial class EntityAnimation : IPacket
 {
     public enum Animation

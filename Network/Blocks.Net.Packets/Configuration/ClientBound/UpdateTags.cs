@@ -7,7 +7,7 @@ using TagsRegistry = Blocks.Net.Packets.SubPackets.Configuration.TagsRegistry;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0D,true,"Configuration")]
+[Packet("update_tags",true,"Configuration")]
 public partial class UpdateTags : IPacket
 {
     [PacketField] public TagsRegistry[] Registries;

@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ClientBound;
 
 [PublicAPI]
-[Packet(0x05,true, "Login")]
+[Packet("cookie_request",true, "Login")]
 public partial class CookieRequest : IPacket
 {
     [PacketField] public Identifier Key;

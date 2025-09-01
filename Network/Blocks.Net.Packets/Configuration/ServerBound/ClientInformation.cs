@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x00,false,"Configuration")]
+[Packet("client_information",false,"Configuration")]
 public partial class ClientInformation : IPacket
 {
     public enum ClientChatMode

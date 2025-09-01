@@ -2,5 +2,5 @@
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x00,true,"Play")]
+[Packet("bundle_delimiter",true,"Play")]
 public partial class BundleDelimiter : IPacket;

@@ -6,7 +6,7 @@ using Byte = Blocks.Net.Packets.Primitives.Byte;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0A, true, "Configuration")]
+[Packet("store_cookie", true, "Configuration")]
 public partial class StoreCookie : IPacket
 {
     [PacketField] public Identifier Key;

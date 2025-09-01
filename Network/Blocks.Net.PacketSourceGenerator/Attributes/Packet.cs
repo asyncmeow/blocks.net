@@ -3,9 +3,9 @@
 namespace Blocks.Net.PacketSourceGenerator.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class Packet(int id, bool clientBound, string state) : Attribute
+public class Packet(string id, bool clientBound, string state) : Attribute
 {
-    public int Id => id;
+    public string Id => id;
     public bool ClientBound => clientBound;
     public string State => state;
 }

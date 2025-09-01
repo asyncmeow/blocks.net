@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ClientBound;
 
 [PublicAPI]
-[Packet(0x03,true,"Login")]
+[Packet("login_compression",true,"Login")]
 public partial class SetCompression : IPacket
 {
     [PacketField] public VarInt Threshold;

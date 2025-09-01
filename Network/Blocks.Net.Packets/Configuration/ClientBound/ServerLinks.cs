@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x0F,true, "Configuration")]
+[Packet("server_links",true, "Configuration")]
 public partial class ServerLinks : IPacket
 {
     [PacketField] public ServerLink[] Links;

@@ -1,6 +1,6 @@
 ﻿using Blocks.Net.PacketSourceGenerator.Attributes;
 
-namespace Blocks.Net.Packets.SubPackets;
+namespace Blocks.Net.Packets.SubPackets.Chunks;
 
 [SubPacket]
 [RequiresStateField(typeof(byte),"BiomeMinBitsPerEntry")]

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x04,true,"Configuration")]
+[Packet("keep_alive",true,"Configuration")]
 public partial class KeepAlive : IPacket
 {
     [PacketField] public long KeepAliveId;

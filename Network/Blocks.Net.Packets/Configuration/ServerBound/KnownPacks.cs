@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x07, false, "Configuration")]
+[Packet("select_known_packs", false, "Configuration")]
 public partial class ServerBoundKnownPacks : IPacket
 {
     [PacketField] public KnownPacks[] Packs;

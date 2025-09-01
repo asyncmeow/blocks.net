@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ClientBound;
 
 [PublicAPI]
-[Packet(0x00,true,"Login")]
+[Packet("login_disconnect",true,"Login")]
 public partial class Disconnect : IPacket
 {
     /// <summary>

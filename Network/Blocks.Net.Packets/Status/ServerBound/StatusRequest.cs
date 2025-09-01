@@ -4,5 +4,5 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Status.ServerBound;
 
 [PublicAPI]
-[Packet(0x00,false,"Status")]
+[Packet("status_request",false,"Status")]
 public partial class StatusRequest : IPacket;

@@ -1,9 +1,8 @@
 ﻿using Blocks.Net.Packets.Primitives;
-using Blocks.Net.Packets.Utilities;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
 
-namespace Blocks.Net.Packets.SubPackets;
+namespace Blocks.Net.Packets.SubPackets.Chunks;
 
 [PublicAPI]
 [RequiresStateField(typeof(int),"DimensionSize")]

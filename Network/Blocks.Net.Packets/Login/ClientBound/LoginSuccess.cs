@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ClientBound;
 
 [PublicAPI]
-[Packet(0x02, true, "Login")]
+[Packet("login_finished",true, "Login")]
 public partial class LoginSuccess : IPacket
 {
     [PacketField] public Uuid PlayerUuid;

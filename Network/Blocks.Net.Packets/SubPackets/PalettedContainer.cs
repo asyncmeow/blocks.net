@@ -16,7 +16,7 @@ public readonly struct PalettedContainer(int[] dataArray)
     {
         public readonly byte BitsPerEntry;
         public readonly int[] Palette;
-        public readonly ulong[] DataArray;
+        public readonly int[] ActualData;
 
         public PalettedContainerSubContainer(int[] data, int maxBitsPerEntryIndirect, int bitsPerEntryDirect)
         {
@@ -28,39 +28,33 @@ public readonly struct PalettedContainer(int[] dataArray)
             {
                 BitsPerEntry = 0;
                 Palette = [data[0]];
-                DataArray = [];
+                ActualData = [];
             }
             else if (bitsPerNumUnique <= maxBitsPerEntryIndirect)
             {
-                var reverseLookup = new Dictionary<int, ulong>();
+                var reverseLookup = new Dictionary<int, int>();
                 for (var i = 0; i < allDistinct.Length; i++)
                 {
-                    reverseLookup[allDistinct[i]] = (ulong)i;
+                    reverseLookup[allDistinct[i]] = i;
                 }
 
                 BitsPerEntry = bitsPerNumUnique;
                 Palette = allDistinct;
-                var entriesPerLong = 64 / bitsPerNumUnique;
-                DataArray = data.Chunk(entriesPerLong).Select(entries => entries.Reverse().Aggregate(0UL,
-                    (previous, current) => (previous << bitsPerEntryDirect) | reverseLookup[current])).ToArray();
+                ActualData = data.Select(x => reverseLookup[x]).ToArray();
             }
             else
             {
                 BitsPerEntry = (byte)bitsPerEntryDirect;
                 Palette = [];
-                var entriesPerLong = 64 / maxBitsPerEntryIndirect;
-                DataArray = data.Chunk(entriesPerLong).Select(entries =>
-                        entries.Reverse().Aggregate(0UL,
-                            (previous, current) => (previous << bitsPerEntryDirect) | (uint)current))
-                    .ToArray();
+                ActualData = data;
             }
         }
 
-        public PalettedContainerSubContainer(byte bitsPerEntry, int[] palette, ulong[] dataArray)
+        public PalettedContainerSubContainer(byte bitsPerEntry, int[] palette, int[] dataArray)
         {
             BitsPerEntry = bitsPerEntry;
             Palette = palette;
-            DataArray = dataArray;
+            ActualData = dataArray;
         }
 
 
@@ -82,113 +76,50 @@ public readonly struct PalettedContainer(int[] dataArray)
 
             if (BitsPerEntry == 0) return;
 
-            foreach (var entry in DataArray)
-            {
-                new Long((long)entry).WriteTo(stream, state);
-            }
+            new LongPackedDataArray(ActualData).WriteTo(stream, state, ActualData.Length, BitsPerEntry);
         }
 
-        public static PalettedContainerSubContainer ReadFrom(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect)
+        public static int[] ReadDataFrom(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect)
         {
             var bitsPerEntry = stream.CheckedReadByte();
             if (bitsPerEntry == 0)
             {
-                int[] palette = [VarInt.ReadFrom(stream,state)];
-                return new PalettedContainerSubContainer(bitsPerEntry, palette, []);
+                var result = new int[length];
+                Array.Fill(result, VarInt.ReadFrom(stream, state));
+                return result;
             }
+
 
             if (bitsPerEntry <= maxBitsPerEntryIndirect)
             {
-                var palette = new int[VarInt.ReadFrom(stream,state)];
+                var palette = new int[VarInt.ReadFrom(stream, state)];
                 for (var i = 0; i < palette.Length; i++)
                 {
-                    palette[i] = VarInt.ReadFrom(stream,state);
+                    palette[i] = VarInt.ReadFrom(stream, state);
                 }
 
-                var entriesPerLong = 64 / bitsPerEntry;
-                var size = (int)Math.Ceiling(length / (float)entriesPerLong);
-                var dataArray = new ulong[size];
-                for (var i = 0; i < dataArray.Length; i++)
-                {
-                    dataArray[i] = (ulong)(long)Long.ReadFrom(stream,state);
-                }
-
-                return new PalettedContainerSubContainer(bitsPerEntry, palette, dataArray);
+                var dataArray = LongPackedDataArray.ReadFrom(stream, state, length, bitsPerEntry, x => palette[x]);
+                return dataArray.Data;
             }
             else
             {
-                var entriesPerLong = 64 / bitsPerEntry;
-                var size = (int)Math.Ceiling(length / (float)entriesPerLong);
-                var dataArray = new ulong[size];
-                for (var i = 0; i < dataArray.Length; i++)
-                {
-                    dataArray[i] = (ulong)(long)Long.ReadFrom(stream,state);
-                }
-
-                return new PalettedContainerSubContainer(bitsPerEntry, [], dataArray);
+                var dataArray = LongPackedDataArray.ReadFrom(stream, state, length, bitsPerEntry);
+                return dataArray.Data;
             }
-        }
-
-        public int[] GetData(int length)
-        {
-            var data = new int[length];
-            if (BitsPerEntry == 0)
-            {
-                Array.Fill(data, Palette[0]);
-            }
-            else if (Palette.Length > 0)
-            {
-                var currentBit = 0;
-                var currentDataIndex = 0;
-                var currentData = DataArray[currentDataIndex];
-                var mask = ~(0xFFFFFFFFFFFFFFFF << BitsPerEntry);
-                for (var i = 0; i < length; i++)
-                {
-                    if (currentBit + BitsPerEntry > 64)
-                    {
-                        currentBit = 0;
-                        currentData = DataArray[++currentDataIndex];
-                    }
-
-                    var subData = (currentData >> currentBit) & mask;
-                    data[i] = Palette[subData];
-                    currentBit += BitsPerEntry;
-                }
-            }
-            else
-            {
-                var currentBit = 0;
-                var currentDataIndex = 0;
-                var currentData = DataArray[currentDataIndex];
-                var mask = ~(0xFFFFFFFFFFFFFFFF << BitsPerEntry);
-                for (var i = 0; i < length; i++)
-                {
-                    if (currentBit + BitsPerEntry > 64)
-                    {
-                        currentBit = 0;
-                        currentData = DataArray[++currentDataIndex];
-                    }
-
-                    var subData = (currentData >> currentBit) & mask;
-                    data[i] = (int)subData;
-                    currentBit += BitsPerEntry;
-                }
-            }
-
-            return data;
         }
     }
 
 
-    public void WriteTo(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect, byte bitsPerEntryDirect)
+    public void WriteTo(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect,
+        byte bitsPerEntryDirect)
     {
         var subContainer = new PalettedContainerSubContainer(DataArray, maxBitsPerEntryIndirect, bitsPerEntryDirect);
         subContainer.WriteTo(stream, state);
     }
 
-    public static PalettedContainer ReadFrom(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect, byte bitsPerEntryDirect)
+    public static PalettedContainer ReadFrom(Stream stream, PacketState state, int length, byte maxBitsPerEntryIndirect,
+        byte bitsPerEntryDirect)
     {
-        var subContainer = PalettedContainerSubContainer.ReadFrom(stream, state, length, bitsPerEntryDirect);
-        return new PalettedContainer(subContainer.GetData(length));
+        return new(PalettedContainerSubContainer.ReadDataFrom(stream, state, length, bitsPerEntryDirect));
     }
 }

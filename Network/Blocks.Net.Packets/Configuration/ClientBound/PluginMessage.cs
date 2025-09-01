@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x01,true,"Configuration")]
+[Packet("custom_payload",true,"Configuration")]
 public partial class PluginMessage : IPacket
 {
     [PacketField] public Identifier Channel;

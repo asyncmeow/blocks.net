@@ -4,5 +4,5 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x03,false,"Configuration")]
+[Packet("finish_configuration",false,"Configuration")]
 public partial class AcknowledgeFinishConfiguration : IPacket;

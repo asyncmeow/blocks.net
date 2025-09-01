@@ -6,7 +6,7 @@ using Byte = Blocks.Net.Packets.Primitives.Byte;
 namespace Blocks.Net.Packets.Login.ClientBound;
 
 [PublicAPI]
-[Packet(0x01,true,"Login")]
+[Packet("hello",true,"Login")]
 public partial class EncryptionRequest : IPacket
 {
     [PacketField] public string ServerId;

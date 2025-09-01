@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Login.ServerBound;
 
 [PublicAPI]
-[Packet(0x02,false,"Login")]
+[Packet("custom_query_answer",false,"Login")]
 public partial class LoginPluginResponse : IPacket
 {
     [PacketField] public VarInt MessageId;

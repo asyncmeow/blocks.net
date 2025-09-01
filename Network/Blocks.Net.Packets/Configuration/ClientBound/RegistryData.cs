@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
 [PublicAPI]
-[Packet(0x07, true, "Configuration")]
+[Packet("registry_data", true, "Configuration")]
 public partial class RegistryData : IPacket
 {
     [PacketField] public Identifier RegistryId;

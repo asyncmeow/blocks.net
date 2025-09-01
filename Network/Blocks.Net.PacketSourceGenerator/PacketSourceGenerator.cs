@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Text;
 using Blocks.Net.LibSourceGeneration.Builders;
@@ -9,9 +10,11 @@ using Blocks.Net.LibSourceGeneration.Query;
 using Blocks.Net.LibSourceGeneration.References;
 using Blocks.Net.LibSourceGeneration.Statements;
 using Blocks.Net.PacketSourceGenerator.Attributes;
+using Blocks.Net.PacketSourceGenerator.Schema;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Newtonsoft.Json;
 using TypeReference = Blocks.Net.LibSourceGeneration.References.TypeReference;
 
 namespace Blocks.Net.PacketSourceGenerator;
@@ -71,7 +74,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     public void Execute(GeneratorExecutionContext context)
     {
         SyntaxAssembly assembly = new(context);
-        Dictionary<string, Dictionary<int, string>> serverBoundPackets = [];
+        Dictionary<string, HashSet<string>> serverBoundPackets = [];
         Dictionary<string, FieldedEnumInformation> fieldedEnums = [];
         var foundPacketParser = false;
         var foundPacketState = false;
@@ -81,51 +84,115 @@ public partial class PacketSourceGenerator : ISourceGenerator
         {
             if (type.FullName == "Blocks.Net.Packets.PacketParser") foundPacketParser = true;
             if (type.FullName == "Blocks.Net.Packets.PacketState") foundPacketState = true;
-            if (type.GetAttributes<Packet>().FirstOrDefault() is { } packet)
+            try
             {
-                GeneratePacketImplementation(context, type, packet, serverBoundPackets);
+                if (type.GetAttributes<Packet>().FirstOrDefault() is { } packet)
+                {
+                    GeneratePacketImplementation(context, type, packet, serverBoundPackets);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
 
-            if (type.GetAttributes<SubPacket>().FirstOrDefault() is { } subPacket)
+            try
             {
-                GenerateSubPacketImplementation(context, type, subPacket);
+                if (type.GetAttributes<SubPacket>().FirstOrDefault() is { } subPacket)
+                {
+                    GenerateSubPacketImplementation(context, type, subPacket);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
 
-            if (type.GetAttributes<EnumField>().FirstOrDefault() is { } enumField)
+            try
             {
-                GenerateEnumFieldImplementation(context, type, enumField, fieldedEnums);
+                if (type.GetAttributes<EnumField>().FirstOrDefault() is { } enumField)
+                {
+                    GenerateEnumFieldImplementation(context, type, enumField, fieldedEnums);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
 
-            if (type.GetAttributes<FieldedEnum>().FirstOrDefault() is { } fieldedEnum)
+            try
             {
-                RegisterFieldedEnum(type, fieldedEnums, fieldedEnum);
+                if (type.GetAttributes<FieldedEnum>().FirstOrDefault() is { } fieldedEnum)
+                {
+                    RegisterFieldedEnum(type, fieldedEnums, fieldedEnum);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
 
-            if (type.GetAttributes<GenerateIdOrXFor>().FirstOrDefault() is not null)
+            try
             {
-                GenerateIdOrInlineFor(context, type);
+                if (type.GetAttributes<GenerateIdOrXFor>().FirstOrDefault() is not null)
+                {
+                    GenerateIdOrInlineFor(context, type);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
 
-            foreach (var attr in type.GetAttributes<RequiresStateField>())
+            try
             {
-                packetStateFields[attr.FieldName] = attr.FieldType;
+                foreach (var attr in type.GetAttributes<RequiresStateField>())
+                {
+                    packetStateFields[attr.FieldName] = attr.FieldType;
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
             }
         }
 
-        if (foundPacketParser)
+        try
         {
-            GeneratePacketParser(context, serverBoundPackets);
+            if (foundPacketParser)
+            {
+                GeneratePacketParser(context, serverBoundPackets);
+            }
+        }
+        catch (Exception e)
+        {
+            // Ignore
         }
 
-        if (foundPacketState)
+        try
         {
-            GeneratePacketState(context, packetStateFields);
+            if (foundPacketState)
+            {
+                GeneratePacketState(context, packetStateFields);
+            }
+        }
+        catch (Exception e)
+        {
+            // Ignore
         }
 
         foreach (var fieldedEnum in fieldedEnums.Values)
         {
-            BuildFieldedEnum(context, fieldedEnum);
+            try
+            {
+                BuildFieldedEnum(context, fieldedEnum);
+            }
+            catch (Exception e)
+            {
+                // Ignore
+            }
         }
+
     }
 
     private void GenerateIdOrInlineFor(GeneratorExecutionContext context, SyntaxType type)
@@ -297,7 +364,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private static void GeneratePacketParser(GeneratorExecutionContext context,
-        Dictionary<string, Dictionary<int, string>> serverBoundPackets)
+        Dictionary<string, HashSet<string>> serverBoundPackets)
     {
         var builder = new SourceFileBuilder().WithFileScopedNamespace("Blocks.Net.Packets").AddClass("PacketParser",
             @class =>
@@ -316,8 +383,8 @@ public partial class PacketSourceGenerator : ISourceGenerator
                                 foreach (var kvp2 in delegates)
                                 {
                                     init.Add(new CollectionInitializer().Add(
-                                        new IntegerLiteral(kvp2.Key, @base: IntegerBase.Hexadecimal),
-                                        new GetStatic(kvp2.Value, "ReadFrom")));
+                                        new GetStatic(kvp2, "PACKET_ID"),
+                                        new GetStatic(kvp2, "ReadFrom")));
                                 }
                             }));
                         });
@@ -399,13 +466,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void GeneratePacketImplementation(GeneratorExecutionContext context, SyntaxType packetType, Packet attr,
-        Dictionary<string, Dictionary<int, string>> serverBoundPackets)
+        Dictionary<string, HashSet<string>> serverBoundPackets)
     {
         var builder = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");
 
         var impl = packetType.GenerateImplementation(builder).AddField("int", "PACKET_ID",
             field => field.Public().Const()
-                .Default(new IntegerLiteral(attr.Id, @base: IntegerBase.Hexadecimal))
+                .Default(new InjectedExpression(
+                    $"Blocks.Net.Packets.PacketIds.{attr.State}.{(attr.ClientBound ? "Clientbound" : "Serverbound")}.{attr.Id.Replace("minecraft:", "").ToUpper()}"))
         ).AddProperty("int", "PacketId",
             id => id.Public()
                 .AddGetter(get => get.Return(new Variable("PACKET_ID"))));
@@ -423,7 +491,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var dict = serverBoundPackets.TryGetValue(attr.State, out var d)
                 ? d
                 : serverBoundPackets[attr.State] = [];
-            dict[attr.Id] = packetType.FullName;
+            dict.Add(packetType.FullName);
         }
 
         context.AddSource($"{packetType.FullName}.g.cs", builder.Build());

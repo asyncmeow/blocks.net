@@ -2,5 +2,5 @@
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x0C,true,"Play")]
+[Packet("chunk_batch_start",true,"Play")]
 public partial class ChunkBatchStart : IPacket;

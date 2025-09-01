@@ -12,7 +12,7 @@ public static partial class PacketParser
     {
         _ = VarInt.ReadFrom(stream,state);
         var id = VarInt.ReadFrom(stream,state);
-        return HandshakingServerBoundPackets.TryGetValue(id, out var cons)
+        return HandshakeServerBoundPackets.TryGetValue(id, out var cons)
             ? cons(stream, state)
             : throw new Exception($"Unsupported Handshaking Packet ID: {id.Value}");
     }
@@ -37,6 +37,7 @@ public static partial class PacketParser
 
     public static IPacket ParseConfiguration(Stream stream, PacketState state)
     {
+        
         _ = VarInt.ReadFrom(stream,state);
         var id = VarInt.ReadFrom(stream,state);
         return ConfigurationServerBoundPackets.TryGetValue(id, out var cons)

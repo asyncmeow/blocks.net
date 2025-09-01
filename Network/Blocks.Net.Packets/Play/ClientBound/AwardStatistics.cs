@@ -3,7 +3,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 
 namespace Blocks.Net.Packets.Play.ClientBound;
 
-[Packet(0x03, true, "Play")]
+[Packet("award_stats", true, "Play")]
 public partial class AwardStatistics
 {
     [PacketField] public Statistic[] Statistics;

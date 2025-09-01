@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x05,false,"Configuration")]
+[Packet("pong",false,"Configuration")]
 public partial class Pong : IPacket
 {
     [PacketField] public int Id;

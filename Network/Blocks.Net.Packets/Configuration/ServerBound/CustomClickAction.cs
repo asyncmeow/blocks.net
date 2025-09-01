@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Blocks.Net.Packets.Configuration.ServerBound;
 
 [PublicAPI]
-[Packet(0x08,false,"Configuration")]
+[Packet("custom_click_action",false,"Configuration")]
 public partial class CustomClickAction : IPacket
 {
     [PacketField] public Identifier Id;
