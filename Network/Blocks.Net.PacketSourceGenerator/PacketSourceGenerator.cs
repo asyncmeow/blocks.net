@@ -41,6 +41,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
         { "double", "Blocks.Net.Packets.Primitives.Double" },
         { "string", "Blocks.Net.Packets.Primitives.String" },
         { "NbtTag", "Blocks.Net.Packets.Primitives.Nbt" },
+        { "TextComponent", "Blocks.Net.Packets.Primitives.Nbt" },
         { "Guid", "Blocks.Net.Packets.Primitives.Uuid" },
         { "Uuid", "Blocks.Net.Packets.Primitives.Uuid" },
         { "RegistryReference", "Blocks.Net.Packets.Primitives.VarInt" },
@@ -155,6 +156,18 @@ public partial class PacketSourceGenerator : ISourceGenerator
             {
                 // Ignore
             }
+
+            try
+            {
+                if (type.GetAttributes<GenerateXOrFor>().FirstOrDefault() is { } generateXOrFor)
+                {
+                    GenerateXOrForOther(context, type, generateXOrFor.OtherType);
+                }
+            }
+            catch (Exception e)
+            {
+                // Ignore
+            }
         }
 
         try
@@ -192,7 +205,77 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 // Ignore
             }
         }
+    }
 
+    private void GenerateXOrForOther(GeneratorExecutionContext context, SyntaxType type, Type otherType)
+    {
+        var builder = new SourceFileBuilder().Using("Blocks.Net.DataTypes").Using("Blocks.Net.Packets.Primitives")
+            .WithFileScopedNamespace(type.Module.Namespace).AddStruct($"{type.Name}Or{otherType.Name}", struc =>
+            {
+                struc.Public();
+                struc.AddField("bool", $"Is{type.Name}", field => field.Public());
+                struc.AddField(type.ShortReference, $"_{type.Name}", out _);
+                struc.AddField(otherType, $"_{otherType.Name}", out _);
+                struc.AddProperty(type.ShortReference, type.Name,
+                    property => property.AddGetter(getter =>
+                            getter.Return(new InjectedExpression(
+                                $"Is{type.Name} ? _{type.Name} : throw new Exception(\"Attemping to get {type.Name} from {type.Name}Or{otherType.Name} when it is a {otherType.Name}\")")))
+                        .AddSetter(setter =>
+                            setter.Add(new Assignment($"Is{type.Name}", new Variable("true")))
+                                .Add(new Assignment($"_{type.Name}", new Variable("value")))));
+                struc.AddProperty(otherType, otherType.Name, property => property.AddGetter(getter =>
+                        getter.Return(new InjectedExpression(
+                            $"!Is{type.Name} ? _{otherType.Name} : throw new Exception(\"Attemping to get {otherType.Name} from {type.Name}Or{otherType.Name} when it is a {type.Name}\")")))
+                    .AddSetter(setter =>
+                        setter.Add(new Assignment($"Is{type.Name}", new Variable("false")))
+                            .Add(new Assignment($"_{otherType.Name}", new Variable("value")))));
+                struc.AddConversionOperator(type.ShortReference,
+                    method => method.Explicit()
+                        .WithParameters(new ParameterReference($"{type.Name}Or{otherType.Name}", "cur")).Public()
+                        .Return(new GetField(new Variable("cur"), type.Name)));
+                struc.AddConversionOperator(otherType,
+                    method => method.Explicit()
+                        .WithParameters(new ParameterReference($"{type.Name}Or{otherType.Name}", "cur")).Public()
+                        .Return(new GetField(new Variable("cur"), otherType.Name)));
+                struc.AddConversionOperator($"{type.Name}Or{otherType.Name}",
+                    method => method.Implicit().WithParameters(new ParameterReference(type.ShortReference, "from"))
+                        .Public().Return(new InjectedExpression($"new() {{ {type.Name} = from }}")));
+                struc.AddConversionOperator($"{type.Name}Or{otherType.Name}",
+                    method => method.Implicit().WithParameters(new ParameterReference(otherType, "from"))
+                        .Public().Return(new InjectedExpression($"new() {{ {otherType.Name} = from }}")));
+
+                struc.AddMethod("void", "WriteTo", write =>
+                {
+                    write.Public();
+                    write.WithParameters(_stream, _state);
+                    write.If(new Variable($"Is{type.Name}"), whenType =>
+                    {
+                        whenType.Add(new Call(_streamVar, "WriteByte", new IntegerLiteral(1)));
+                        whenType.Add(new Call(new Variable($"_{type.Name}"), "WriteTo", _streamVar, _stateVar));
+                        whenType.Else(whenOtherType =>
+                        {
+                            whenOtherType.Add(new Call(_streamVar, "WriteByte", new IntegerLiteral(0)));
+                            whenOtherType.Add(new Call(new Variable($"_{otherType.Name}"), "WriteTo", _streamVar,
+                                _stateVar));
+                        });
+                    });
+                });
+
+                struc.AddMethod($"{type.Name}Or{otherType.Name}", "ReadFrom", read =>
+                {
+                    read.Public().Static();
+                    read.WithParameters(_stream, _state);
+                    read.If(new Equals(new Call(_streamVar, "ReadByte"), new IntegerLiteral(1)), whenType =>
+                    {
+                        whenType.Return(new TypeCall(type.ShortReference, "ReadFrom", _streamVar, _stateVar));
+                        whenType.Else(whenOtherType =>
+                        {
+                            whenOtherType.Return(new TypeCall(otherType, "ReadFrom", _streamVar, _stateVar));
+                        });
+                    });
+                });
+            });
+        context.AddSource($"{type.Name}Or{otherType.Name}.g.cs", builder.Build());
     }
 
     private void GenerateIdOrInlineFor(GeneratorExecutionContext context, SyntaxType type)
@@ -209,9 +292,12 @@ public partial class PacketSourceGenerator : ISourceGenerator
                             get.Return(new Equals(new Variable("Id"), new IntegerLiteral(0)))));
                     struc.AddProperty("RegistryReference", "RegistryId",
                         property => property.Public().AddGetter(get =>
-                            get.Return(new NewObject(null,
-                                new InjectedExpression(
-                                    "Id == 0 ? throw new Exception(\"Attempting to get the registry reference for an inline definition\") : Id - 1")))));
+                                get.Return(new NewObject(null,
+                                    new InjectedExpression(
+                                        "Id == 0 ? throw new Exception(\"Attempting to get the registry reference for an inline definition\") : Id - 1"))))
+                            .AddSetter(set => set.Add(new Assignment("Id",
+                                new Addition(new GetField(new Variable("value"), "RegistryId"),
+                                    new IntegerLiteral(1)))).Add(new Assignment("Value", new Variable("null")))));
                     struc.AddConversionOperator("RegistryReference",
                         method => method.Implicit().WithParameters(new ParameterReference($"IdOr{type.Name}", "cur"))
                             .Public().Return(new GetField(new Variable("cur"), "RegistryId")));

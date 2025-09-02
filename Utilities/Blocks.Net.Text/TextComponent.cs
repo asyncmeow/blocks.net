@@ -44,7 +44,7 @@ public class TextComponent
                                          Font == null && Insertion == null && ClickEvent == null &&
                                          HoverEvent == null && Children.Count == 0;
     
-    public JsonNode ToJson(bool force=false)
+    public JsonNode ToJson(bool force=true)
     {
         if (IsSimpleTextComponent && !force) return Text ?? "";
         var json = new JsonObject();
@@ -123,6 +123,102 @@ public class TextComponent
         }
         
         return json;
+    }
+
+    public static TextComponent FromNbt(NbtTag tag)
+    {
+        var result = new TextComponent();
+        if (tag.TagType == NbtTagType.Compound)
+        {
+            // Now we have to do this
+            var compound = (CompoundTag)tag;
+            if (compound.TryGet("text", out var text))
+            {
+                result.Type =  ComponentType.Text;
+                result.Text = ((StringTag)text).Value;
+            }
+
+            if (compound.TryGet("translate", out var translate))
+            {
+                result.Type = ComponentType.Translatable;
+                result.Text = ((StringTag)translate).Value;
+                if (compound.TryGet("with", out var with))
+                {
+                    result.With = ((ListTag)with).Children.Select(FromNbt).ToList();
+                }
+            }
+
+            if (compound.TryGet("keybind", out var keybind))
+            {
+                result.Type = ComponentType.KeyBind;
+                result.Text = ((StringTag)keybind).Value;
+            }
+
+            if (compound.TryGet("color", out var color))
+            {
+                result.Color = ((StringTag)color).Value;
+            }
+
+            if (compound.TryGet("bold", out var bold))
+            {
+                result.Bold = ((ByteTag)bold).Value != 0 ? StylingState.Set : StylingState.Clear;
+            }
+            
+            
+            if (compound.TryGet("italic", out var italic))
+            {
+                result.Italic = ((ByteTag)italic).Value != 0 ? StylingState.Set : StylingState.Clear;
+            }
+            
+            if (compound.TryGet("underlined", out var underlined))
+            {
+                result.Underlined = ((ByteTag)underlined).Value != 0 ? StylingState.Set : StylingState.Clear;
+            }
+            
+            if (compound.TryGet("strikethrough", out var strikethrough))
+            {
+                result.Strikethrough = ((ByteTag)underlined).Value != 0 ? StylingState.Set : StylingState.Clear;
+            }
+            
+            if (compound.TryGet("obfuscated", out var obfuscated))
+            {
+                result.Strikethrough = ((ByteTag)underlined).Value != 0 ? StylingState.Set : StylingState.Clear;
+            }
+
+            if (compound.TryGet("font", out var font))
+            {
+                result.Font = ((StringTag)font).Value;
+            }
+            
+            if (compound.TryGet("insertion", out var insertion))
+            {
+                result.Insertion = ((StringTag)font).Value;
+            }
+
+            if (compound.TryGet("clickEvent", out var clickEvent))
+            {
+                result.ClickEvent = ClickEvent.FromNbtTag(clickEvent);
+            }
+
+            if (compound.TryGet("hoverEvent", out var hoverEvent))
+            {
+                result.HoverEvent = HoverEvent.FromNbt(hoverEvent);
+            }
+
+            if (compound.TryGet("extra", out var extra))
+            {
+                foreach (var value in ((ListTag)extra).Children)
+                {
+                    result.Children.Add(FromNbt(value));
+                }
+            }
+
+        }
+        else if (tag.TagType == NbtTagType.String) {
+            result.Type = ComponentType.Text;
+            result.Text = ((StringTag)tag).Value;
+        }
+        return result;
     }
 
     public NbtTag ToNbt(bool forceCompound=false)

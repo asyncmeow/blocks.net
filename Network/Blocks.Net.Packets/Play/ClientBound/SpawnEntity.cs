@@ -18,5 +18,5 @@ public partial class SpawnEntity : IPacket
     [PacketField] public Angle Yaw;
     [PacketField] public Angle HeadYaw;
     [PacketField] public VarInt Data;
-    [PacketField] public VelocityVector Velocity;
+    [PacketField] public Short3 Velocity;
 }

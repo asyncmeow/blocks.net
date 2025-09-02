@@ -10,6 +10,5 @@ public partial class MapColorPatchInformation
     [PacketField] public byte Rows;
     [PacketField] public byte X;
     [PacketField] public byte Z;
-    [PacketField] public VarInt Length;
-    [PacketField] public byte[] Data;
+    [PacketField] public byte[]? Data;
 }

@@ -5,6 +5,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 namespace Blocks.Net.Packets.SubPackets.EntityMetadata;
 
 [SubPacket]
+[GenerateIdOrXFor]
 public partial struct PaintingVariant
 {
     [PacketField] public int Width;

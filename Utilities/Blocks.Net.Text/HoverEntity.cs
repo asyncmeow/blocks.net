@@ -48,4 +48,16 @@ public class HoverEntity(string type, Guid uuid, string? name = null) : HoverEve
 
         return action;
     }
+
+    public static HoverEntity FromNbt(CompoundTag tag)
+    {
+        var type = ((StringTag)tag["type"]).Value;
+        var uuid = Guid.Parse(((StringTag)tag["uuid"]).Value);
+        string? name = null;
+        if (tag.TryGet("name", out var value))
+        {
+            name = ((StringTag)value).Value;
+        }
+        return new HoverEntity(type, uuid, name);
+    }
 }

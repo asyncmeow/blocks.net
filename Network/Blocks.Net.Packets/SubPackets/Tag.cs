@@ -6,6 +6,6 @@ namespace Blocks.Net.Packets.SubPackets;
 [SubPacket]
 public partial struct Tag
 {
-    [PacketField] public string TagName;
+    [PacketField] public Identifier TagName;
     [PacketField] public VarInt[] Entries;
 }

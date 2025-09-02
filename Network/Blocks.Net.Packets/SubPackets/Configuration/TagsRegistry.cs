@@ -6,6 +6,6 @@ namespace Blocks.Net.Packets.SubPackets.Configuration;
 [SubPacket]
 public partial struct TagsRegistry
 {
-    [PacketField] public string Registry;
+    [PacketField] public Identifier Registry;
     [PacketField] public Tag[] Tags;
 }

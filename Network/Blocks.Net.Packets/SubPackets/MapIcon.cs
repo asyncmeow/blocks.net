@@ -34,7 +34,15 @@ public partial struct MapIcon
         GreenBanner = 23,
         RedBanner = 24,
         BlackBanner = 25,
-        TreasureMarker = 26
+        TreasureMarker = 26,
+        DesertVillage = 27,
+        PlainsVillage = 28,
+        SavannaVillage = 29,
+        SnowyVillage = 30,
+        TaigaVillage = 31,
+        JungleTemple = 32,
+        SwampHut = 33,
+        TrialChambers = 34
     }
 
     [PacketEnum(typeof(VarInt))] public MapIconType Type;

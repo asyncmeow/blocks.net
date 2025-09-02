@@ -8,6 +8,6 @@ public partial struct PreviousMessage
 {
     [PacketField] public VarInt MessageId;
 
-    [PacketOptionalArrayField("MessageId == 0", "256")]
-    public byte[] Signature;
+    [PacketOptionalField("MessageId == 0")]
+    public ChatSignature Signature;
 }

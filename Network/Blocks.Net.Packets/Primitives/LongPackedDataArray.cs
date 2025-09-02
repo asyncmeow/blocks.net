@@ -1,7 +1,6 @@
-﻿using Blocks.Net.Packets.Primitives;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
-namespace Blocks.Net.Packets.SubPackets;
+namespace Blocks.Net.Packets.Primitives;
 
 [PublicAPI]
 public struct LongPackedDataArray(int[] data)

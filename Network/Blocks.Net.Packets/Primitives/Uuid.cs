@@ -1,9 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using Blocks.Net.Packets.Utilities;
+using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets.Primitives;
 
+[GenerateXOrFor(typeof(String))]
 public readonly struct Uuid(Guid v) : IPrimitive
 {
     public Guid Value => v;

@@ -1,4 +1,5 @@
-﻿using Blocks.Net.Nbt;
+﻿using System.Runtime.CompilerServices;
+using Blocks.Net.Nbt;
 using Blocks.Net.Packets.Primitives;
 using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
@@ -14,7 +15,9 @@ public enum PlayerAction
     UpdateGameMode = 0x04,
     UpdateListed = 0x08,
     UpdateLatency = 0x10,
-    UpdateDisplayName = 0x20
+    UpdateDisplayName = 0x20,
+    UpdateListPriority = 0x40,
+    UpdateHat = 0x80
 }
 
 [EnumField(typeof(PlayerAction))]
@@ -72,8 +75,17 @@ public partial class PlayerActionUpdateLatency
 [EnumField(typeof(PlayerAction))]
 public partial class PlayerActionUpdateDisplayName
 {
-    [PacketField] public bool HasDisplayName;
+    [PacketField] public NbtTag? DisplayName;
+}
 
-    [PacketOptionalField("HasDisplayName")]
-    public NbtTag DisplayName;
+[EnumField(typeof(PlayerAction))]
+public partial class PlayerActionUpdateListPriority
+{
+    [PacketField] public VarInt Priority;
+}
+
+[EnumField(typeof(PlayerAction))]
+public partial class PlayerActionUpdateHat
+{
+    [PacketField] public bool Visible;
 }

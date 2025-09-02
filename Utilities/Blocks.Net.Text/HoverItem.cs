@@ -55,4 +55,18 @@ public class HoverItem(string id, int count=1,NbtTag? tag=null) : HoverEvent
         };
         return compound;
     }
+    
+    
+
+    public static HoverItem FromNbt(CompoundTag tag)
+    {
+        var id = ((StringTag)tag["id"]).Value;
+        var count = ((IntTag)tag["count"]).Value;
+        NbtTag? itemTag = null;
+        if (tag.TryGet("tag", out var value))
+        {
+            throw new NotImplementedException("From snbt");
+        }
+        return new HoverItem(id,count,itemTag);
+    }
 }

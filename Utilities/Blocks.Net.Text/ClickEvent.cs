@@ -23,6 +23,18 @@ public class ClickEvent
         ["value"] = Value
     };
 
+    public static ClickEvent FromNbtTag(NbtTag tag)
+    {
+        var compound = (CompoundTag)tag;
+        var action =  ((StringTag)compound["action"]).Value;
+        var value =  ((StringTag)compound["value"]).Value;
+        return new()
+        {
+            Action = action,
+            Value = value
+        };
+    }
+
     public static ClickEvent OpenUrl(string url) => new()
     {
         Action = "open_url",

@@ -152,7 +152,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                                 "It has been greater than 10 seconds since server has entered configuration state, kicking player");
                             ((IPacket)new Disconnect
                             {
-                                Reason = kickReason.ToNbt()
+                                Reason = kickReason
                             }).WriteToStream(stream, CurrentState);
                             break;
                         }

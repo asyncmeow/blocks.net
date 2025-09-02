@@ -24,4 +24,10 @@ public class HoverText(TextComponent toBeShown) : HoverEvent
             ["content"] = toBeShown.ToNbt()
         };
     }
+
+
+    public static HoverText FromNbt(CompoundTag tag)
+    {
+        return new HoverText(TextComponent.FromNbt(tag));
+    }
 }
