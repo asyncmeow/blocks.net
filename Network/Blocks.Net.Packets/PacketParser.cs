@@ -44,4 +44,15 @@ public static partial class PacketParser
             ? cons(stream, state)
             : throw new Exception($"Unsupported Configuration Packet ID: {id.Value}");
     }
+    
+    
+    public static IPacket ParsePlay(Stream stream, PacketState state)
+    {
+        
+        _ = VarInt.ReadFrom(stream,state);
+        var id = VarInt.ReadFrom(stream,state);
+        return PlayServerBoundPackets.TryGetValue(id, out var cons)
+            ? cons(stream, state)
+            : throw new Exception($"Unsupported Play Packet ID: {id.Value}");
+    }
 }

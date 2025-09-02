@@ -15,6 +15,7 @@ public class PropertyReference(TypeReference typeReference, string fieldName) : 
     private List<Attribute> _attributes = [];
     private IExpression? _default = null;
     private DocCommentBuilder? _docCommentBuilder = null;
+    private List<ParameterReference> _parameters = [];
     private bool _static;
     private bool _event;
     private bool _abstract;
@@ -48,6 +49,19 @@ public class PropertyReference(TypeReference typeReference, string fieldName) : 
         if (_sealed) builder.Append("sealed ");
         if (_event) builder.Append("event ");
         builder.Append(typeReference.Generate()).Append(' ').Append(fieldName);
+        if (fieldName == "this")
+        {
+            builder.Append('[');
+            for (var i = 0; i < _parameters.Count; i++)
+            {
+                _parameters[i].Build(builder, indentation, indentationLevel);
+                if (i < _parameters.Count - 1)
+                {
+                    builder.Append(", ");
+                }
+            }
+            builder.Append(']');
+        }
         if (_children.Count == 1 && _children[0] is PropertyMethodReference
             {
                 IsGetterWithSingleReturn: true
@@ -85,7 +99,20 @@ public class PropertyReference(TypeReference typeReference, string fieldName) : 
         _attributes.AddRange(attributes);
         return this;
     }
-
+    
+    
+    public PropertyReference WithParameters(params ParameterReference[] attributes)
+    {
+        _parameters.AddRange(attributes);
+        return this;
+    }
+    
+    public PropertyReference WithParameters(IEnumerable<ParameterReference> attributes)
+    {
+        _parameters.AddRange(attributes);
+        return this;
+    }
+    
     public PropertyReference SetVisibility(VisibilityLevel visibilityLevel)
     {
         _visibility = visibilityLevel;

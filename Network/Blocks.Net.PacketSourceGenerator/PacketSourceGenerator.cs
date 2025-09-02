@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
+using Attribute = Blocks.Net.LibSourceGeneration.Expressions.Attribute;
 using TypeReference = Blocks.Net.LibSourceGeneration.References.TypeReference;
 
 namespace Blocks.Net.PacketSourceGenerator;
@@ -168,6 +169,18 @@ public partial class PacketSourceGenerator : ISourceGenerator
             {
                 // Ignore
             }
+
+            try
+            {
+                if (type.GetAttributes<FixedBitSet>().FirstOrDefault() is { } fixedBitSet)
+                {
+                    GenerateFixedBitSet(context, type, fixedBitSet.Indices);
+                }
+            }
+            catch (Exception e)
+            {
+                // ignore;
+            }
         }
 
         try
@@ -205,6 +218,66 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 // Ignore
             }
         }
+    }
+
+    private void GenerateFixedBitSet(GeneratorExecutionContext context, SyntaxType type, int indices)
+    {
+        var sfb = new SourceFileBuilder();
+        sfb.Using("System.Runtime.CompilerServices");
+        var impl = type.GenerateImplementation(sfb);
+        var entries = (int)Math.Ceiling((double)indices / 8);
+        var tName = $"ByteBuffer{entries}";
+        //Lets first add the byte array
+        impl.AddStruct(tName, bitBuffer =>
+        {
+            bitBuffer.Private();
+            bitBuffer.WithAttributes(
+                (Attribute)new Attribute("InlineArray").WithParameters(
+                    new IntegerLiteral(entries)));
+            bitBuffer.AddField("byte", "_element0", field => field.Private());
+        });
+        impl.AddField(tName, "_buffer", field => field.Private());
+        impl.AddMethod("void", "WriteTo", method =>
+        {
+            method.Public().WithParameters(_stream, _state);
+            for (var i = 0; i < entries; i++)
+            {
+                method.Add(new Call(_streamVar, "WriteByte",
+                    new Subscript(new Variable("_buffer"), new IntegerLiteral(i))));
+            }
+        });
+        impl.AddMethod(type.ShortReference, "ReadFrom", method =>
+        {
+            method.Public().WithParameters(_stream, _state).Static();
+            method.DeclareVariable(tName, "buffer", new NewObject());
+            for (var i = 0; i < entries; i++)
+            {
+                method.Add(new Assignment(new Subscript(new Variable("buffer"), new IntegerLiteral(i)),
+                    new CastExpression("byte", new Call(_streamVar, "ReadByte"))));
+            }
+
+            method.Return(new InjectedExpression("new() {_buffer = buffer};"));
+        });
+        impl.AddProperty("bool", "this", indexer =>
+        {
+            indexer.Public().WithParameters(new ParameterReference("int", "index"));
+            indexer.AddGetter(getter =>
+            {
+                getter.Return(new InjectedExpression("(_buffer[index/8] & (1 << (index % 8))) != 0"));
+            });
+            indexer.AddSetter(setter =>
+            {
+                setter.If(new Variable("value"), whenSet =>
+                {
+                    whenSet.Add(new InjectedExpression("_buffer[index/8] |= (byte)((1 << (index % 8)))"));
+                    whenSet.Else(whenNotSet =>
+                    {
+                        whenNotSet.Add(new InjectedExpression("_buffer[index/8] &= (byte)~(1 << (index % 8))"));
+                    });
+                });
+            });
+        });
+        context.AddSource($"{type.FullName}.g.cs", sfb.Build());
     }
 
     private void GenerateXOrForOther(GeneratorExecutionContext context, SyntaxType type, Type otherType)
