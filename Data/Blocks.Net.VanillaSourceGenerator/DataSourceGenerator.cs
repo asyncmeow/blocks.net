@@ -24,10 +24,50 @@ public class DataSourceGenerator : ISourceGenerator
 
         var blocksType = assembly.Types.FirstOrDefault(x => x.FullName == "Blocks.Net.Data.Vanilla.Blocks")!;
         GenerateBlocks(context, blocksType);
-        
-        var coreRegistryDataType = assembly.Types.FirstOrDefault(x => x.FullName == "Blocks.Net.Data.Vanilla.CoreRegistryData")!;
+
+        var coreRegistryDataType =
+            assembly.Types.FirstOrDefault(x => x.FullName == "Blocks.Net.Data.Vanilla.CoreRegistryData")!;
         GenerateRegistries(context, coreRegistryDataType);
+
+        var mutableRegistryDataType =
+            assembly.Types.FirstOrDefault(x => x.FullName == "Blocks.Net.Data.Vanilla.MutableRegistryData")!;
+        GenerateMutableRegistries(context, mutableRegistryDataType);
+
+        var defaultTagsType = assembly.Types.FirstOrDefault(x => x.FullName == "Blocks.Net.Data.Vanilla.DefaultTags")!;
+        GenerateDefaultTags(context, defaultTagsType);
     }
+
+    #region Tags
+
+    private void GenerateDefaultTags(GeneratorExecutionContext context, SyntaxType defaultTagsType)
+    {
+        var tagsJson = context.AdditionalFiles.First(x => x.Path.EndsWith("tags.json"));
+        var tagsJsonText = tagsJson.GetText()!.ToString();
+        var tagsJsonDecoded =
+            JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<int>>>>(tagsJsonText);
+
+        var registryBuilder = new SourceFileBuilder();
+        var impl = defaultTagsType.GenerateImplementation(registryBuilder);
+        impl.AddMethod("void", "AddAllTags", out var addAll);
+        addAll.Static().Partial();
+        foreach (var tagRegistry in tagsJsonDecoded!)
+        {
+            List<IExpression> outerParameters = [new StringLiteral(tagRegistry.Key)];
+            foreach (var kvp in tagRegistry.Value)
+            {
+                List<IExpression> innerParameters = [new StringLiteral(kvp.Key)];
+                innerParameters.AddRange(kvp.Value.Select(x => new IntegerLiteral(x)));
+                outerParameters.Add(new NewObject("DefaultTag", innerParameters.ToArray()));
+            }
+
+            addAll.Add(new Call(new Variable("Registries"), "Add",
+                new NewObject(null, outerParameters.ToArray())));
+        }
+
+        context.AddSource("DefaultTags.g.cs", registryBuilder.Build());
+    }
+
+    #endregion
 
 
     #region Blocks
@@ -342,7 +382,6 @@ public class DataSourceGenerator : ISourceGenerator
 
     public void GenerateRegistries(GeneratorExecutionContext context, SyntaxType coreRegistryDataType)
     {
-        
         var registriesJson = context.AdditionalFiles.First(x => x.Path.EndsWith("registries.json"));
         var registriesText = registriesJson.GetText()!.ToString();
         var registries = JsonConvert.DeserializeObject<Dictionary<string, RegistrySchema>>(registriesText);
@@ -351,18 +390,18 @@ public class DataSourceGenerator : ISourceGenerator
         var impl = coreRegistryDataType.GenerateImplementation(registryBuilder);
         impl.AddMethod("void", "AddAllRegistries", out var addAll);
         addAll.Static().Partial();
-        
-        
+
+
         foreach (var registry in registries!)
         {
             var key = registry.Key;
             var value = registry.Value!;
             var fieldName = key.Replace("minecraft:", "").Replace("/", "_").ToUpperInvariant();
-            impl.AddField("CoreRegistry",fieldName, out var field);
+            impl.AddField("CoreRegistry", fieldName, out var field);
             GenerateRegistry(key, value, field);
-            addAll.Add(new BoundCall(new GetField(new Variable("Registries"), "Add"),new Variable(fieldName)));
+            addAll.Add(new BoundCall(new GetField(new Variable("Registries"), "Add"), new Variable(fieldName)));
         }
-        
+
         context.AddSource("CoreRegistryData.g.cs", registryBuilder.Build());
     }
 
@@ -375,12 +414,49 @@ public class DataSourceGenerator : ISourceGenerator
         {
             parameters[entry.Value.ProtocolId + 1] = new StringLiteral(entry.Key);
         }
+
         field.Default(new NewObject("CoreRegistry", parameters));
     }
-    
-    
-    
+
+    public void GenerateMutableRegistries(GeneratorExecutionContext context, SyntaxType coreRegistryDataType)
+    {
+        var registriesJson = context.AdditionalFiles.First(x => x.Path.EndsWith("registries_mutable.json"));
+        var registriesText = registriesJson.GetText()!.ToString();
+        var registries = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(registriesText);
+
+
+        var registryBuilder = new SourceFileBuilder();
+        var impl = coreRegistryDataType.GenerateImplementation(registryBuilder);
+        impl.AddMethod("void", "AddAllRegistries", out var addAll);
+        addAll.Static().Partial();
+        foreach (var registry in registries!)
+        {
+            var key = registry.Key;
+            var value = registry.Value!;
+            var fieldName = key.Replace("minecraft:", "").Replace("/", "_").ToUpperInvariant();
+            impl.AddField("CoreRegistry", fieldName, out var field);
+            GenerateMutableRegistry(key, value, field);
+            addAll.Add(new BoundCall(new GetField(new Variable("Registries"), "Add"), new Variable(fieldName)));
+        }
+
+        context.AddSource("MutableRegistryData.g.cs", registryBuilder.Build());
+    }
+
+    private void GenerateMutableRegistry(string key, List<string> value, FieldReference field)
+    {
+        field.Static().Public().Readonly();
+        var parameters = new StringLiteral[value.Count + 1];
+        parameters[0] = new StringLiteral(key);
+        for (var i = 0; i < value.Count; i++)
+        {
+            parameters[i + 1] = new StringLiteral(value[i]);
+        }
+
+        field.Default(new NewObject("CoreRegistry", parameters));
+    }
+
     #endregion
+
     #region utilities
 
     public static string ToPascalCase(string snakeCaseString)

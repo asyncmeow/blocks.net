@@ -48,4 +48,11 @@ public sealed class DoubleTag : NbtTag
         }
         sb.Append($"{Value}d");
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append(Value);
+        EndJsonObject(sb);
+    }
 }

@@ -159,4 +159,20 @@ public sealed class ListTag : NbtTag, IEnumerable
         }
         sb.AppendRepeating(indentation, level).Append(']');
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append('[');
+        for (var i = 0; i < Count; i++)
+        {
+            var child = Children[i];
+            if (child.TagType != NbtTagType.End)
+            {
+                child.DumpJsonImpl(sb, false);
+            }
+            if (i < Count - 2) sb.Append(',');
+        }
+        EndJsonObject(sb);
+    }
 }

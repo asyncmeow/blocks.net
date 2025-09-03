@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Blocks.Net.Packets;
 
-public static partial class PacketParser
+public static partial class ServerboundPacketParser
 {
     // Will add a ParsePlay, ParseConfiguration, ParseHandshake, and ParseLogin for 
 

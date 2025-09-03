@@ -28,17 +28,15 @@ public class Registry(NamespacedIdentifier id)
         ? new RegistryReference(Entries.IndexOf(entryId))
         : throw new KeyNotFoundException();
 
-    public bool HasExtraData(params string[] extraMutualPacks) =>
-        Entries.Any(x => x.Key != "minecraft:core" && !extraMutualPacks.Contains(x.Value.pack));
-
-    public RegistryData GenerateRegistryDataPacket(params string[] extraMutualPacks)
+    public RegistryData GenerateRegistryDataPacket(params string[] mutualPacks)
     {
         var entries = (from value in Entries
-            let id = value.Key
-            let pack = value.Value.pack
-            let val = value.Value.value
-            where pack != "minecraft:core" && !extraMutualPacks.Contains(pack)
-            select new RegistryEntry { EntryId = id, Data = val }).ToList();
+                let id = value.Key
+                let pack = value.Value.pack
+                let val = value.Value.value
+                select new RegistryEntry
+                    { EntryId = id, Data = mutualPacks.Contains(pack) ? null : val })
+            .ToList();
 
         return new RegistryData
         {

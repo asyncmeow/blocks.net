@@ -170,4 +170,21 @@ public sealed class CompoundTag : NbtTag
         }
         sb.AppendRepeating(indentation, level).Append('}');
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb,dumpName);
+        sb.Append('{');
+        for (var i = 0; i < ActualChildren.Count - 1; i++)
+        {
+            var child = ActualChildren[i];
+            if (child.TagType != NbtTagType.End)
+            {
+                child.DumpJsonImpl(sb, true);
+            }
+            if (i < ActualChildren.Count - 2) sb.Append(',');
+        }
+        sb.Append('}');
+        EndJsonObject(sb);
+    }
 }

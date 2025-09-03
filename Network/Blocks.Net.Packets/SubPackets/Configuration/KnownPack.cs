@@ -5,7 +5,7 @@ namespace Blocks.Net.Packets.SubPackets.Configuration;
 
 [PublicAPI]
 [SubPacket]
-public partial struct KnownPacks
+public partial struct KnownPack
 {
     [PacketField] public string Namespace;
     [PacketField] public string Id;

@@ -5,7 +5,7 @@ namespace Blocks.Net.Packets.Primitives;
 [SubPacket]
 public partial struct BitSet
 {
-    [PacketField] public int Length = 0;
+    [PacketField] public VarInt Length = 0;
     [PacketArrayField("Length")] public long[] Data = [];
 
     public BitSet()

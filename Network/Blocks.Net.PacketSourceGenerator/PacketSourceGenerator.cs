@@ -77,20 +77,23 @@ public partial class PacketSourceGenerator : ISourceGenerator
     {
         SyntaxAssembly assembly = new(context);
         Dictionary<string, HashSet<string>> serverBoundPackets = [];
+        Dictionary<string, HashSet<string>> clientBoundPackets = [];
         Dictionary<string, FieldedEnumInformation> fieldedEnums = [];
         var foundPacketParser = false;
+        var foundClientPacketParser = false;
         var foundPacketState = false;
         Dictionary<string, TypeReference> packetStateFields = new();
 
         foreach (var type in assembly.Types)
         {
-            if (type.FullName == "Blocks.Net.Packets.PacketParser") foundPacketParser = true;
+            if (type.FullName == "Blocks.Net.Packets.ServerboundPacketParser") foundPacketParser = true;
+            if (type.FullName == "Blocks.Net.Packets.ClientboundPacketParser") foundClientPacketParser = true;
             if (type.FullName == "Blocks.Net.Packets.PacketState") foundPacketState = true;
             try
             {
                 if (type.GetAttributes<Packet>().FirstOrDefault() is { } packet)
                 {
-                    GeneratePacketImplementation(context, type, packet, serverBoundPackets);
+                    GeneratePacketImplementation(context, type, packet, serverBoundPackets,clientBoundPackets);
                 }
             }
             catch (Exception e)
@@ -187,7 +190,20 @@ public partial class PacketSourceGenerator : ISourceGenerator
         {
             if (foundPacketParser)
             {
-                GeneratePacketParser(context, serverBoundPackets);
+                GenerateServerboundPacketParser(context, serverBoundPackets);
+            }
+        }
+        catch (Exception e)
+        {
+            // Ignore
+        }
+        
+        
+        try
+        {
+            if (foundClientPacketParser)
+            {
+                GenerateClientboundPacketParser(context, clientBoundPackets);
             }
         }
         catch (Exception e)
@@ -218,6 +234,35 @@ public partial class PacketSourceGenerator : ISourceGenerator
                 // Ignore
             }
         }
+    }
+
+    private void GenerateClientboundPacketParser(GeneratorExecutionContext context, Dictionary<string, HashSet<string>> clientBoundPackets)
+    {
+        var builder = new SourceFileBuilder().WithFileScopedNamespace("Blocks.Net.Packets").AddClass("ClientboundPacketParser",
+            @class =>
+            {
+                @class.Static().Partial();
+                foreach (var kvp in clientBoundPackets)
+                {
+                    var state = kvp.Key;
+                    var delegates = kvp.Value;
+                    @class.AddField("Dictionary<int,Func<Stream,PacketState,IPacket>>", $"{state}ClientBoundPackets",
+                        field =>
+                        {
+                            field.Public().Static();
+                            field.Default(new NewObject().InitializeWith(init =>
+                            {
+                                foreach (var kvp2 in delegates)
+                                {
+                                    init.Add(new CollectionInitializer().Add(
+                                        new GetStatic(kvp2, "PACKET_ID"),
+                                        new GetStatic(kvp2, "ReadFrom")));
+                                }
+                            }));
+                        });
+                }
+            });
+        context.AddSource("ClientboundPacketParser.g.cs", builder.Build());
     }
 
     private void GenerateFixedBitSet(GeneratorExecutionContext context, SyntaxType type, int indices)
@@ -522,10 +567,10 @@ public partial class PacketSourceGenerator : ISourceGenerator
         context.AddSource($"{fieldedEnum.Namespace}.{fieldedEnum.Name}.g.cs", sfb.Build());
     }
 
-    private static void GeneratePacketParser(GeneratorExecutionContext context,
+    private static void GenerateServerboundPacketParser(GeneratorExecutionContext context,
         Dictionary<string, HashSet<string>> serverBoundPackets)
     {
-        var builder = new SourceFileBuilder().WithFileScopedNamespace("Blocks.Net.Packets").AddClass("PacketParser",
+        var builder = new SourceFileBuilder().WithFileScopedNamespace("Blocks.Net.Packets").AddClass("ServerboundPacketParser",
             @class =>
             {
                 @class.Static().Partial();
@@ -549,7 +594,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
                         });
                 }
             });
-        context.AddSource("PacketParser.g.cs", builder.Build());
+        context.AddSource("ServerboundPacketParser.g.cs", builder.Build());
     }
 
     private static void RegisterFieldedEnum(SyntaxType type, Dictionary<string, FieldedEnumInformation> fieldedEnums,
@@ -625,7 +670,7 @@ public partial class PacketSourceGenerator : ISourceGenerator
     }
 
     private void GeneratePacketImplementation(GeneratorExecutionContext context, SyntaxType packetType, Packet attr,
-        Dictionary<string, HashSet<string>> serverBoundPackets)
+        Dictionary<string, HashSet<string>> serverBoundPackets, Dictionary<string, HashSet<string>> clientBoundPackets)
     {
         var builder = new SourceFileBuilder().Nullable().Using("Blocks.Net.Packets.Primitives");
 
@@ -650,6 +695,14 @@ public partial class PacketSourceGenerator : ISourceGenerator
             var dict = serverBoundPackets.TryGetValue(attr.State, out var d)
                 ? d
                 : serverBoundPackets[attr.State] = [];
+            dict.Add(packetType.FullName);
+        }
+        else
+        {
+            
+            var dict = clientBoundPackets.TryGetValue(attr.State, out var d)
+                ? d
+                : clientBoundPackets[attr.State] = [];
             dict.Add(packetType.FullName);
         }
 

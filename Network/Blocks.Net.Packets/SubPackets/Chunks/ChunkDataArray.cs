@@ -9,19 +9,18 @@ namespace Blocks.Net.Packets.SubPackets.Chunks;
 public readonly struct ChunkDataArray(ChunkSection[] chunkData)
 {
     public readonly ChunkSection[] ChunkData = chunkData;
-    private static readonly ThreadLocal<byte[]> BackingBuffer = new(() => new byte[48 * 4096 * 2]);
+    private static readonly ThreadLocal<byte[]> BackingBuffer = new(() => new byte[24 * 4 * 4 * 4096]);
 
     public void WriteTo(Stream stream, PacketState state)
     {
-        using var memoryStream = new MemoryStream(BackingBuffer.Value!);
+        if (state.DimensionSize * 4 * 4 * 4096 > BackingBuffer.Value!.Length)
+        {
+            BackingBuffer.Value = new byte[state.DimensionSize * 2 * 4 * 4096];
+        }
+        using var memoryStream = new MemoryStream(BackingBuffer.Value!, 0, BackingBuffer.Value!.Length, true, true);
         foreach (var data in ChunkData)
         {
             data.WriteTo(memoryStream, state);
-        }
-
-        if (memoryStream.Position > BackingBuffer.Value!.Length)
-        {
-            BackingBuffer.Value = new byte[memoryStream.Position * 2];
         }
         
         new VarInt((int)memoryStream.Position).WriteTo(stream, state);

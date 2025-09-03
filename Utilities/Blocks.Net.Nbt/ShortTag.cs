@@ -46,4 +46,12 @@ public class ShortTag : NbtTag
         }
         sb.Append($"{Value}s");
     }
+    
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append(Value);
+        EndJsonObject(sb);
+    }
+    
 }

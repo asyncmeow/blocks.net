@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.Data.Vanilla", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.VanillaSourceGenerator", "Data\Blocks.Net.VanillaSourceGenerator\Blocks.Net.VanillaSourceGenerator.csproj", "{AE56D2B2-F224-4BA6-90AC-78FBDA40265E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blocks.Net.TestClient", "Blocks.Net.TestClient\Blocks.Net.TestClient.csproj", "{AA816F93-C4B8-4FBF-8937-CA72A70ADEBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,5 +104,9 @@ Global
 		{AE56D2B2-F224-4BA6-90AC-78FBDA40265E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE56D2B2-F224-4BA6-90AC-78FBDA40265E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE56D2B2-F224-4BA6-90AC-78FBDA40265E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA816F93-C4B8-4FBF-8937-CA72A70ADEBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA816F93-C4B8-4FBF-8937-CA72A70ADEBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA816F93-C4B8-4FBF-8937-CA72A70ADEBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA816F93-C4B8-4FBF-8937-CA72A70ADEBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

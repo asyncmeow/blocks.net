@@ -2,7 +2,6 @@
 using Blocks.Net.Packets.SubPackets;
 using Blocks.Net.PacketSourceGenerator.Attributes;
 using JetBrains.Annotations;
-using KnownPacks = Blocks.Net.Packets.SubPackets.Configuration.KnownPacks;
 
 namespace Blocks.Net.Packets.Configuration.ClientBound;
 
@@ -10,5 +9,5 @@ namespace Blocks.Net.Packets.Configuration.ClientBound;
 [Packet("select_known_packs", true, "Configuration")]
 public partial class KnownPacks : IPacket
 {
-    [PacketField] public SubPackets.Configuration.KnownPacks[] Packs;
+    [PacketField] public SubPackets.Configuration.KnownPack[] Packs;
 }

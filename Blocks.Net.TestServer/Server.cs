@@ -14,8 +14,21 @@ using Blocks.Net.Packets.Status.ServerBound;
 using Blocks.Net.Text;
 using Disconnect = Blocks.Net.Packets.Configuration.ClientBound.Disconnect;
 using System.Text.Json.Nodes;
+using Blocks.Net.Data.Vanilla;
+using Blocks.Net.DataTypes;
 using Blocks.Net.Framework;
+using Blocks.Net.Packets.Configuration.ClientBound;
+using Blocks.Net.Packets.Enums;
+using Blocks.Net.Packets.Play.ClientBound;
+using Blocks.Net.Packets.Play.ServerBound;
 using Blocks.Net.Packets.SubPackets;
+using Blocks.Net.Packets.SubPackets.Chunks;
+using Blocks.Net.Packets.SubPackets.Configuration;
+using ClientInformation = Blocks.Net.Packets.Configuration.ServerBound.ClientInformation;
+using KeepAlive = Blocks.Net.Packets.Configuration.ClientBound.KeepAlive;
+using PingRequest = Blocks.Net.Packets.Status.ServerBound.PingRequest;
+using PingResponse = Blocks.Net.Packets.Status.ClientBound.PingResponse;
+using PluginMessage = Blocks.Net.Packets.Configuration.ServerBound.PluginMessage;
 
 namespace Blocks.Net.TestServer;
 
@@ -23,15 +36,18 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 {
     public PacketState CurrentState = new PacketState
     {
-        DimensionSize = 8,
+        DimensionSize = 24,
+        CurrentDimensionHeightmapBitsPerEntry = 4,
         BiomeMinBitsPerEntry = 6
     };
+
     public enum ConnectionState
     {
         Handshake,
         Status,
         Login,
-        Configuration
+        Configuration,
+        Play
     }
 
     // We want to make a very shitty server that can only handle one client at a time
@@ -40,10 +56,13 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public DateTime ConfigStateEnteredAt;
 
+    public RegistrySet Registries = new();
+    public TagRegistrySet TagRegistries = new();
+
     private MemoryStream ReadMessage(Stream stream, PacketState state)
     {
         var length = VarInt.ReadFrom(stream, state);
-        
+
         // Handle legacy server list ping!
         if (State == ConnectionState.Handshake && length == 254)
         {
@@ -181,6 +200,9 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                         case ConnectionState.Configuration:
                             HandleConfigurationMessage(message, stream);
                             break;
+                        case ConnectionState.Play:
+                            HandlePlayMessage(message, stream);
+                            break;
                         default:
                             Console.WriteLine($"Disconnecting client due to being in invalid state: {State}");
                             stream.Close();
@@ -206,7 +228,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleHandshakeMessage(MemoryStream message)
     {
-        var packet = PacketParser.ParseHandshaking(message, CurrentState);
+        var packet = ServerboundPacketParser.ParseHandshaking(message, CurrentState);
         if (packet is Handshake handshake)
         {
             Console.WriteLine(
@@ -227,7 +249,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public bool HandleStatusMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseStatus(message, CurrentState);
+        var packet = ServerboundPacketParser.ParseStatus(message, CurrentState);
         switch (packet)
         {
             case StatusRequest statusRequest:
@@ -254,7 +276,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleLoginMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseLogin(message, CurrentState);
+        var packet = ServerboundPacketParser.ParseLogin(message, CurrentState);
         switch (packet)
         {
             case LoginStart loginStart:
@@ -281,7 +303,7 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
 
     public void HandleConfigurationMessage(MemoryStream message, NetworkStream ns)
     {
-        var packet = PacketParser.ParseConfiguration(message, CurrentState);
+        var packet = ServerboundPacketParser.ParseConfiguration(message, CurrentState);
         switch (packet)
         {
             case PluginMessage pluginMessage:
@@ -292,7 +314,8 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                 switch (pluginMessage.Channel)
                 {
                     case "minecraft:brand":
-                        Console.WriteLine($"Client Brand: {Packets.Primitives.String.ReadFrom(channelStream, CurrentState).Value}");
+                        Console.WriteLine(
+                            $"Client Brand: {Packets.Primitives.String.ReadFrom(channelStream, CurrentState).Value}");
                         break;
                     default:
                         Console.WriteLine("Unsupported channel");
@@ -318,14 +341,249 @@ public class Server(IPAddress address, TextComponent motd, TextComponent kickRea
                     Channel = "minecraft:brand",
                     Data = channelStream.ToArray()
                 });
+                WritePacket(new FeatureFlags
+                {
+                    Flags = []
+                });
+                WritePacket(new KnownPacks
+                {
+                    Packs =
+                    [
+                        new KnownPack
+                        {
+                            Namespace = "minecraft",
+                            Id = "core",
+                            Version = "1.21.8"
+                        }
+                    ]
+                });
             }
+                break;
+            case ServerBoundKnownPacks serverBoundKnownPacks:
+                foreach (var pack in serverBoundKnownPacks.Packs)
+                {
+                    Console.WriteLine($"Received known pack {pack.Namespace}:{pack.Id} version {pack.Version}");
+                }
+
+                // Send all the registries
+                foreach (var registry in Registries.Registries)
+                {
+                    WritePacket(registry.Value.GenerateRegistryDataPacket("minecraft:core"));
+                }
+
+                WritePacket(TagRegistries.GenerateTagUpdatePacket());
+                // Then finish the configuration
+                WritePacket(new FinishConfiguration());
+                break;
+            case AcknowledgeFinishConfiguration acknowledgeFinishConfiguration:
+                BeginPlayMode();
                 break;
             default:
                 Console.WriteLine($"Client sent unsupported configuration packet: {packet.GetType()}");
                 break;
         }
     }
-    
+
+    public void BeginPlayMode()
+    {
+        WritePacket(new Login
+        {
+            EntityId = 1,
+            IsHardcore = false,
+            DimensionNames = ["overworld"],
+            MaxPlayers = 1,
+            ViewDistance = 12,
+            SimulationDistance = 16,
+            ReducedDebugInfo = false,
+            EnableRespawnScreen = false,
+            DoLimitedCrafting = false,
+            DimensionType = Registries.DimensionType["overworld"],
+            DimensionName = "overworld",
+            HashedSeed = 0,
+            GameMode = 3,
+            PreviousGameMode = -1,
+            IsDebug = false,
+            IsFlat = true,
+            DeathLocation = null,
+            PortalCooldown = 0,
+            SeaLevel = 0,
+            EnforcesSecureChat = false
+        });
+        WritePacket(new SynchronizePlayerPosition
+        {
+            TeleportId = 0,
+            Position = new Double3
+            {
+                X = 0,
+                Y = 1,
+                Z = 0
+            },
+            Velocity = new Double3
+            {
+                X = 0,
+                Y = 0,
+                Z = 0
+            },
+            Yaw = 0,
+            Pitch = 0,
+            TeleportFlags = 0
+        });
+        State = ConnectionState.Play;
+    }
+
+
+    private void HandlePlayMessage(MemoryStream message, NetworkStream stream)
+    {
+        var packet = ServerboundPacketParser.ParsePlay(message, CurrentState);
+        switch (packet)
+        {
+            case ConfirmTeleportation confirmTeleportation:
+                LoadAllChunks();
+                WritePacket(new ClientboundKeepAlive
+                {
+                    KeepAliveId = _keepAliveId++
+                });
+                break;
+            case Blocks.Net.Packets.Play.ServerBound.KeepAlive keepAlive:
+                WritePacket(new ClientboundKeepAlive
+                {
+                    KeepAliveId = _keepAliveId++
+                });
+                break;
+        }
+    }
+
+    private void LoadAllChunks()
+    {
+        WritePacket(new GameEvent
+        {
+            Event = GameEvent.Events.StartWaitingForLevelChunks,
+            Value = 0
+        });
+        WritePacket(new SetCenterChunk
+        {
+            ChunkX = 0,
+            ChunkZ = 0
+        });
+        for (var x = -4; x < 4; x++)
+        {
+            for (var z = -4; z < 4; z++)
+            {
+                SendChunk(x, z);
+            }
+        }
+    }
+
+    private int _keepAliveId = 0;
+
+    private void SendChunk(int x, int z)
+    {
+        var biomeArray = new int[64];
+        Array.Fill(biomeArray, Registries.Biome["badlands"].RegistryId);
+        var blockArray = new int[4096];
+        Array.Fill(blockArray, Data.Vanilla.Blocks.WHITE_CONCRETE.StateId);
+        var blockArray2 = new int[4096];
+        Array.Fill(blockArray2, Data.Vanilla.Blocks.AIR.StateId);
+        var airChunk = new ChunkSection
+        {
+            BlockCount = 0,
+            Biomes = new PalettedContainer(biomeArray),
+            BlockStates = new PalettedContainer(blockArray2)
+        };
+        var concreteChunk = new ChunkSection
+        {
+            BlockCount = 4096,
+            Biomes = new PalettedContainer(biomeArray),
+            BlockStates = new PalettedContainer(blockArray)
+        };
+        var allTrueBitset = new BitSet(26);
+        for (var i = 0; i < 26; i++)
+        {
+            allTrueBitset[i] = true;
+        }
+        var allFalseBitset = new BitSet(26);
+        var filledSkylightArray = new LightArray
+        {
+            Array = new byte[2048]
+        };
+        Array.Fill(filledSkylightArray.Array, (byte)255);
+        var lightData = new LightData
+        {
+            SkyLightMask = allTrueBitset,
+            BlockLightMask = allFalseBitset,
+            EmptyBlockLightMask = allFalseBitset,
+            EmptySkyLightMask = allFalseBitset,
+            SkyLightArrays = [
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+                filledSkylightArray,
+            ],
+            BlockLightArrays = []
+        };
+        
+        var packet = new ChunkDataAndUpdateLight
+        {
+            ChunkX = x,
+            ChunkZ = z,
+            Data = new ChunkData
+            {
+                Heightmaps = [],
+                Data = new ChunkDataArray([
+                    concreteChunk,
+                    concreteChunk,
+                    concreteChunk,
+                    concreteChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                    airChunk,
+                ]),
+                BlockEntities = []
+            },
+            Light = lightData
+        };
+        WritePacket(packet);
+    }
+
 
     // Eventually we want a client in a white concrete void
 }

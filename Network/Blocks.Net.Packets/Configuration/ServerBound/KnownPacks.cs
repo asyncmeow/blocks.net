@@ -9,5 +9,5 @@ namespace Blocks.Net.Packets.Configuration.ServerBound;
 [Packet("select_known_packs", false, "Configuration")]
 public partial class ServerBoundKnownPacks : IPacket
 {
-    [PacketField] public KnownPacks[] Packs;
+    [PacketField] public KnownPack[] Packs;
 }

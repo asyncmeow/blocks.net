@@ -17,4 +17,9 @@ public class EndTag : NbtTag
     {
         sb.Append("End");
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        sb.Append("null");
+    }
 }

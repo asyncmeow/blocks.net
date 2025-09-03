@@ -303,6 +303,12 @@ public class TextComponent
         
         return compound;
     }
+
+    public override string ToString()
+    {
+        return Text + string.Join("", Children.Select(x => x.ToString()));
+    }
+
     #endregion
 
 

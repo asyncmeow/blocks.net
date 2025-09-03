@@ -87,4 +87,18 @@ public sealed class IntArrayTag : NbtTag
         }
         sb.AppendRepeating(indentation, level).Append(']');
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        for (var i = 0; i < Count; i++)
+        {
+            sb.Append(Data[i]);
+            if (i != Count - 1)
+            {
+                sb.Append(',');
+            }
+        }
+        EndJsonObject(sb);
+    }
 }

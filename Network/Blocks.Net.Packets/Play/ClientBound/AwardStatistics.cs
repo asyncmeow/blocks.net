@@ -4,7 +4,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 namespace Blocks.Net.Packets.Play.ClientBound;
 
 [Packet("award_stats", true, "Play")]
-public partial class AwardStatistics
+public partial class AwardStatistics : IPacket
 {
     [PacketField] public Statistic[] Statistics;
 }

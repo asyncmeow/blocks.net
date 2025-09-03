@@ -3,15 +3,16 @@
 namespace Blocks.Net.Data.Vanilla;
 
 [PublicAPI]
-public static partial class CoreRegistryData
+public static partial class MutableRegistryData
 {
     // A field of List<NamespacedIdentifier> will be made for each of these
-    public static List<CoreRegistry> Registries = [];
+    public static List<CoreRegistry> Registries;
 
     static partial void AddAllRegistries();
 
-    static CoreRegistryData()
+    static MutableRegistryData()
     {
+        Registries = [];
         AddAllRegistries();
     }
 }

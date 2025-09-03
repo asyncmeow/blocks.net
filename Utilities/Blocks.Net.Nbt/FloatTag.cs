@@ -47,4 +47,11 @@ public sealed class FloatTag : NbtTag
         }
         sb.Append($"{Value}f");
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append(Value);
+        EndJsonObject(sb);
+    }
 }

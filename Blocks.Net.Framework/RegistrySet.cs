@@ -17,7 +17,7 @@ public class RegistrySet
         // Now we need to get all the vanilla registry data into the registries
         const string core = "minecraft:core";
 
-        foreach (var registry in CoreRegistryData.Registries)
+        foreach (var registry in MutableRegistryData.Registries)
         {
             var reg = GetOrCreateRegistry(registry.Registry);
             foreach (var entry in registry.Entries)
@@ -38,15 +38,22 @@ public class RegistrySet
     }
     
     
-    
-    // public Registry TrimMaterial => GetOrCreateRegistry("trim_material");
-    // public Registry TrimPattern => GetOrCreateRegistry("trim_pattern");
-    // public Registry BannerPattern => GetOrCreateRegistry("banner_pattern");
-    // public Registry Biome => GetOrCreateRegistry("worldgen/biome");
-    // public Registry ChatType => GetOrCreateRegistry("chat_type");
-    // public Registry DamageType => GetOrCreateRegistry("damage_type");
-    // public Registry DimensionType => GetOrCreateRegistry("dimension_type");
-    // public Registry WolfVariant => GetOrCreateRegistry("wolf_variant");
-    // public Registry PaintingVariant => GetOrCreateRegistry("painting_variant");
-    // public Registry Dialog = new Registry("dialog");
+    public Registry Biome => GetOrCreateRegistry("worldgen/biome");
+    public Registry ChatType => GetOrCreateRegistry("chat_type");
+    public Registry TrimPattern => GetOrCreateRegistry("trim_pattern");
+    public Registry TrimMaterial => GetOrCreateRegistry("trim_material");
+    public Registry WolfVariant => GetOrCreateRegistry("wolf_variant");
+    public Registry WolfSoundVariant => GetOrCreateRegistry("wolf_sound_variant");
+    public Registry PigVariant => GetOrCreateRegistry("pig_variant");
+    public Registry CowVariant => GetOrCreateRegistry("cow_variant");
+    public Registry ChickenVariant => GetOrCreateRegistry("chicken_variant");
+    public Registry PaintingVariant => GetOrCreateRegistry("painting_variant");
+    public Registry DimensionType => GetOrCreateRegistry("dimension_type");
+    public Registry DamageType => GetOrCreateRegistry("damage_type");
+    public Registry BannerPattern => GetOrCreateRegistry("banner_pattern");
+    public Registry Enchantment => GetOrCreateRegistry("enchantment");
+    public Registry Instrument => GetOrCreateRegistry("instrument");
+    public Registry TestEnvironment => GetOrCreateRegistry("test_environment");
+    public Registry TestInstance => GetOrCreateRegistry("test_instance");
+    public Registry Dialog => GetOrCreateRegistry("dialog");
 }

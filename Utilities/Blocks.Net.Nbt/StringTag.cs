@@ -43,4 +43,14 @@ public sealed class StringTag : NbtTag
 
         sb.Append(System.Web.HttpUtility.JavaScriptStringEncode(Value,true));
     }
+    
+    
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append('"');
+        sb.Append(CleanForJson(Value));
+        sb.Append('"');
+        EndJsonObject(sb);
+    }
 }

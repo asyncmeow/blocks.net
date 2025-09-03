@@ -5,7 +5,7 @@ using Blocks.Net.PacketSourceGenerator.Attributes;
 namespace Blocks.Net.Packets.Play.ClientBound;
 
 [Packet("level_particles", true, "Play")]
-public partial class Particle
+public partial class Particle : IPacket
 {
     [PacketField] public bool LongDistance;
     [PacketField] public bool AlwaysVisible;

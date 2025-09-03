@@ -24,6 +24,10 @@
       <AdditionalFiles Include="blocks.json" />
       <None Remove="registries.json" />
       <AdditionalFiles Include="registries.json" />
+      <None Remove="registries_mutable.json" />
+      <AdditionalFiles Include="registries_mutable.json" />
+      <None Remove="tags.json" />
+      <AdditionalFiles Include="tags.json" />
     </ItemGroup>
 
 </Project>

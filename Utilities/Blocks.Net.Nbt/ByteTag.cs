@@ -43,4 +43,11 @@ public sealed class ByteTag : NbtTag
         }
         sb.Append($"{Value}b");
     }
+
+    public override void DumpJsonImpl(StringBuilder sb, bool dumpName)
+    {
+        BeginJsonObject(sb, dumpName);
+        sb.Append(Value);
+        EndJsonObject(sb);
+    }
 }

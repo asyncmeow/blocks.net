@@ -11,7 +11,7 @@ public abstract class NbtTag
 
     public abstract void WriteData(Stream stream);
 
-    public void Write(Stream stream, bool writeName=true)
+    public void Write(Stream stream, bool writeName = true)
     {
         stream.WriteByte((byte)TagType);
         if (writeName && TagType != NbtTagType.End && Name != null) stream.WriteLengthPrefixedString(Name!);
@@ -19,8 +19,8 @@ public abstract class NbtTag
     }
 
     public static NbtTag Null => new EndTag();
-    
-    public static NbtTag Read(Stream stream, bool readName=true)
+
+    public static NbtTag Read(Stream stream, bool readName = true)
     {
         var tag = (NbtTagType)stream.CheckedReadByte();
         switch (tag)
@@ -28,7 +28,7 @@ public abstract class NbtTag
             case NbtTagType.End:
                 return new EndTag();
             case NbtTagType.Byte:
-                return new ByteTag(stream,readName);
+                return new ByteTag(stream, readName);
             case NbtTagType.Short:
                 return new ShortTag(stream, readName);
             case NbtTagType.Int:
@@ -46,7 +46,7 @@ public abstract class NbtTag
             case NbtTagType.List:
                 return new ListTag(stream, readName);
             case NbtTagType.Compound:
-                return new CompoundTag(stream,readName);
+                return new CompoundTag(stream, readName);
             case NbtTagType.IntArray:
                 return new IntArrayTag(stream, readName);
             case NbtTagType.LongArray:
@@ -57,8 +57,8 @@ public abstract class NbtTag
     }
 
     protected abstract bool IsSameImpl(NbtTag other);
-    
-    public bool IsSameAs(NbtTag other, bool compareNames=false)
+
+    public bool IsSameAs(NbtTag other, bool compareNames = false)
     {
         if (other.TagType != TagType) return false;
         if (compareNames && other.Name != Name) return false;
@@ -66,17 +66,96 @@ public abstract class NbtTag
     }
 
     public abstract void DumpImpl(StringBuilder sb, string indentation, int level, bool dumpName);
-    public string Dump(string indentation="    ", bool dumpName=true)
+
+    public string Dump(string indentation = "    ", bool dumpName = true)
     {
         var sb = new StringBuilder();
-        DumpImpl(sb, indentation,0,dumpName);
+        DumpImpl(sb, indentation, 0, dumpName);
         return sb.ToString();
     }
-    
+
+    public abstract void DumpJsonImpl(StringBuilder sb, bool dumpName);
+
+    public string DumpJson()
+    {
+        var sb = new StringBuilder();
+        DumpJsonImpl(sb, false);
+        return sb.ToString();
+    }
+
+    protected static string CleanForJson(string? s)
+    {
+        if (string.IsNullOrEmpty(s))
+        {
+            return "";
+        }
+
+        var len = s.Length;
+        var sb = new StringBuilder(len + 4);
+
+        for (var i = 0; i < len; i += 1)
+        {
+            var c = s[i];
+            switch (c)
+            {
+                case '\\':
+                case '"':
+                case '/':
+                    sb.Append('\\');
+                    sb.Append(c);
+                    break;
+                case '\b':
+                    sb.Append("\\b");
+                    break;
+                case '\t':
+                    sb.Append("\\t");
+                    break;
+                case '\n':
+                    sb.Append("\\n");
+                    break;
+                case '\f':
+                    sb.Append("\\f");
+                    break;
+                case '\r':
+                    sb.Append("\\r");
+                    break;
+                default:
+                    if (c < ' ')
+                    {
+                        var t = "000" + String.Format("X", c);
+                        sb.Append("\\u" + t.Substring(t.Length - 4));
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                    break;
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    protected void BeginJsonObject(StringBuilder sb, bool dumpName)
+    {
+        if (dumpName && Name is { } name)
+        {
+            sb.Append($"\"{CleanForJson(name)}\": ");
+        }
+
+        sb.Append($"{{\"$type\": {TagType}, \"$value\": ");
+    }
+
+    protected void EndJsonObject(StringBuilder sb)
+    {
+        sb.Append('}');
+    }
+
+
     // TODO: ToSNbt() function
 
     public string SNbt => throw new NotImplementedException();
-    
+
     // Now for some implicit operators meant for creating NBT tags quickly in a compound, or in lists (but you want to be explicit with typing for lists)
     // This is also the reason that compounds set tag names as well
 
